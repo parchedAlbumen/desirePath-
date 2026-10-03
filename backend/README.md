@@ -16,3 +16,8 @@ Check it works: http://localhost:8000/api/health  (docs at /docs)
 - `app/schemas/`  – request/response validation
 - `app/services/` – business logic (elevation, route generation)
 - `tests/`        – pytest
+
+## Database (Tiger Data / Postgres)
+1. `cp .env.example .env`
+2. Paste your connection string into `DATABASE_URL` in `.env` (gitignored, never commit it)
+3. `python scripts_check_db.py` to verify the connection
