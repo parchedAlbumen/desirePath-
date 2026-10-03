@@ -64,24 +64,32 @@ export function mockGenerateRoutes(req: RouteRequest): RouteResponse {
   const area = lookupArea(req.postalCode)
   const code = req.postalCode.replace(/\s/g, '')
 
-  const routes: GeneratedRoute[] = TEMPLATES.map((t, idx) => {
-    const path = buildLoop(area.start, t.km, t.seed, t.heading)
+  const routes: GeneratedRoute[] = TEMPLATES.flatMap((t, idx): GeneratedRoute[] => {
+    const templatePath = buildLoop(area.start, t.km, t.seed, t.heading)
     const hi = req.minElevation + t.band * (req.maxElevation - req.minElevation)
-    const elevations = elevationProfile(path.length, t, req.minElevation, hi, req.avgElevation)
+    const elevations = elevationProfile(templatePath.length, t, req.minElevation, hi, req.avgElevation)
     const gain = Math.round(elevationGain(elevations))
-    return {
+    const maxKm =
+      req.limit.type === 'distance'
+        ? req.limit.maxDistanceKm
+        : (req.limit.maxDurationMinutes - gain / 100) / 5.8
+    const km = Math.min(t.km, maxKm)
+    if (km <= 0) return []
+
+    const path = buildLoop(area.start, km, t.seed, t.heading)
+    return [{
       id: `${code}-${t.difficulty}`,
       name: area.routeNames[idx],
       difficulty: t.difficulty,
       terrain: t.terrain,
-      distanceKm: t.km,
+      distanceKm: Math.round(km * 10) / 10,
       elevationGain: gain,
       minElevation: Math.round(Math.min(...elevations)),
       avgElevation: Math.round(elevations.reduce((a, b) => a + b, 0) / elevations.length),
       maxElevation: Math.round(Math.max(...elevations)),
-      estimatedMinutes: Math.round(t.km * 5.8 + gain / 100),
+      estimatedMinutes: Math.round(km * 5.8 + gain / 100),
       points: path.map((p, i) => ({ ...p, elevation: Math.round(elevations[i] * 10) / 10 })),
-    }
+    }]
   })
 
   return {

@@ -129,6 +129,11 @@ export function RoutesPage() {
 
         <p className="routes__target">
           Elevation target: {request.minElevation} m min · {request.avgElevation} m avg · {request.maxElevation} m max
+          <br />
+          Route limit: up to{' '}
+          {request.limit.type === 'distance'
+            ? `${request.limit.maxDistanceKm} km`
+            : `${request.limit.maxDurationMinutes} min`}
         </p>
       </section>
     </main>

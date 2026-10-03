@@ -2,12 +2,17 @@
 
 export type Difficulty = 'easy' | 'medium' | 'hard'
 
-/** What the user submits on the planner form. Elevations are in metres above sea level. */
+export type RouteLimit =
+  | { type: 'distance'; maxDistanceKm: number }
+  | { type: 'time'; maxDurationMinutes: number }
+
+/** What the user submits on the planner form. Elevations are metres above sea level. */
 export interface RouteRequest {
   postalCode: string
   minElevation: number
   avgElevation: number
   maxElevation: number
+  limit: RouteLimit
 }
 
 export interface LatLng {
