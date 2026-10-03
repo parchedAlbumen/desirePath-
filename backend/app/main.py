@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.db import close_pool, get_connection, open_pool
-from app.routers import routes
+from app.routers import generate, routes
 
 
 @asynccontextmanager
@@ -23,6 +23,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(generate.router)  # before routes: keeps /generate clear of /{route_id}
 app.include_router(routes.router)
 
 
