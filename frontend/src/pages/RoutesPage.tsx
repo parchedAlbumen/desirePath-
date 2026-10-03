@@ -7,6 +7,7 @@ import { RouteMap, type MapRoute } from '../components/RouteMap.tsx'
 import { useAppState } from '../hooks/useAppState.ts'
 import type { GeneratedRoute } from '../types/route.ts'
 import { DIFFICULTY_COLOR } from '../utils/difficulty.ts'
+import { formatTime } from '../utils/format.ts'
 import './RoutesPage.css'
 
 export function RoutesPage() {
@@ -128,12 +129,9 @@ export function RoutesPage() {
         })}
 
         <p className="routes__target">
-          Elevation target: {request.minElevation} m min · {request.avgElevation} m avg · {request.maxElevation} m max
+          Target: {request.targetDistanceKm} km in {formatTime(request.targetTime)}
           <br />
-          Route limit: up to{' '}
-          {request.limit.type === 'distance'
-            ? `${request.limit.maxDistanceKm} km`
-            : `${request.limit.maxDurationMinutes} min`}
+          Elevation: {request.minElevation} m min · {request.avgElevation} m avg · {request.maxElevation} m max
         </p>
       </section>
     </main>

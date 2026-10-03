@@ -1,3 +1,5 @@
+import type { Duration } from '../types/route.ts'
+
 export function formatDuration(totalSec: number): string {
   const s = Math.max(0, Math.floor(totalSec))
   const h = Math.floor(s / 3600)
@@ -22,3 +24,9 @@ export function formatRunDate(iso: string): string {
 }
 
 export const formatKm = (km: number) => km.toFixed(1)
+
+/** { hours: 1, minutes: 30 } → "1 h 30 min"; { hours: 0, minutes: 45 } → "45 min". */
+export function formatTime({ hours, minutes }: Duration): string {
+  if (hours === 0) return `${minutes} min`
+  return minutes === 0 ? `${hours} h` : `${hours} h ${minutes} min`
+}
