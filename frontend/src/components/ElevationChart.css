@@ -1,0 +1,86 @@
+.sparkline {
+  width: 110px;
+  height: 36px;
+  display: block;
+}
+
+.profile {
+  padding: 18px 22px 16px;
+}
+
+.profile__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.profile__head h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.profile__head span {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.profile__body {
+  position: relative;
+  height: 84px;
+  margin-left: 44px;
+}
+
+.profile__body svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+
+.profile__axis {
+  position: absolute;
+  left: -44px;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.profile__dot {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border: 2px solid var(--bg);
+  border-radius: 50%;
+  background: var(--lime);
+  transform: translate(-50%, -50%);
+}
+
+.profile__foot {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.profile__you {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: var(--lime);
+}
+
+.profile__you i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--lime);
+}

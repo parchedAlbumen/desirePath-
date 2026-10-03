@@ -1,0 +1,123 @@
+.route-map {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: var(--map-ground);
+}
+
+.route-map > svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.route-map__ground {
+  fill: var(--map-ground);
+}
+
+.route-map__shade {
+  fill: #18231c;
+}
+
+.route-map__contour {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.075);
+}
+
+.route-map__road-edge {
+  fill: none;
+  stroke: #66746c;
+  stroke-linecap: round;
+  opacity: 0.55;
+}
+
+.route-map__road {
+  fill: none;
+  stroke: #3a4640;
+  stroke-linecap: round;
+}
+
+.route-map__start-ring {
+  fill: var(--bg);
+}
+
+.route-map__start-dot {
+  fill: var(--lime);
+}
+
+.route-map__halo {
+  fill: var(--lime);
+  opacity: 0.22;
+}
+
+.route-map__callout {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 10px));
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 7px 12px;
+  border: 1px solid;
+  border-radius: 8px;
+  background: rgba(11, 13, 12, 0.92);
+  font-size: 13px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.route-map__callout-title {
+  color: var(--text);
+}
+
+.route-map__scale {
+  position: absolute;
+  left: 0;
+  right: 16px;
+  bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.route-map__scale i {
+  display: block;
+  height: 3px;
+  border: 1px solid var(--muted);
+  border-top: 0;
+}
+
+/* Overlays placed by pages */
+.map-chip {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(11, 13, 12, 0.85);
+  font-size: 14px;
+  color: var(--text);
+}
+
+.map-chip svg {
+  width: 16px;
+  height: 16px;
+  color: var(--lime);
+}
+
+.map-label {
+  position: absolute;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.35;
+  color: rgba(243, 245, 244, 0.55);
+  pointer-events: none;
+}
