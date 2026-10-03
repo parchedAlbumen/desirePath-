@@ -21,3 +21,9 @@ Check it works: http://localhost:8000/api/health  (docs at /docs)
 1. `cp .env.example .env`
 2. Paste your connection string into `DATABASE_URL` in `.env` (gitignored, never commit it)
 3. `python scripts_check_db.py` to verify the connection
+
+## Testing
+```bash
+pytest -v                      # DB tests auto-skip if DATABASE_URL isn't set
+```
+Or with the server running, open http://localhost:8000/api/health/db
