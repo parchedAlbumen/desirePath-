@@ -39,28 +39,34 @@
   color: var(--muted);
 }
 
-.plan__limit-toggle {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-bottom: 18px;
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
 }
 
-.plan__limit-toggle button {
-  min-height: 44px;
-  padding: 8px 12px;
+.chip {
+  min-height: 40px;
+  padding: 0 18px;
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: 999px;
   background: var(--surface);
+  font-size: 15px;
   color: var(--muted);
-  font: inherit;
   cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background-color 0.15s;
 }
 
-.plan__limit-toggle button[aria-pressed='true'] {
-  border-color: var(--lime);
-  background: var(--surface-2);
+.chip:hover {
   color: var(--text);
+}
+
+.chip.is-active {
+  border-color: var(--lime);
+  background: var(--lime-soft);
+  color: var(--lime);
+  font-weight: 600;
 }
 
 .plan__submit {

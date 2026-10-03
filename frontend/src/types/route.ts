@@ -2,17 +2,25 @@
 
 export type Difficulty = 'easy' | 'medium' | 'hard'
 
-export type RouteLimit =
-  | { type: 'distance'; maxDistanceKm: number }
-  | { type: 'time'; maxDurationMinutes: number }
+/** A length of time, e.g. { hours: 0, minutes: 45 }. */
+export interface Duration {
+  hours: number
+  minutes: number
+}
 
-/** What the user submits on the planner form. Elevations are metres above sea level. */
+/**
+ * What the user submits on the planner form (the agreed request JSON).
+ * Elevations are metres above sea level.
+ */
 export interface RouteRequest {
   postalCode: string
+  /** How far the runner wants to go. All three routes aim for this length. */
+  targetDistanceKm: number
+  /** How long the runner has. Routes shouldn't take longer than this. */
+  targetTime: Duration
   minElevation: number
   avgElevation: number
   maxElevation: number
-  limit: RouteLimit
 }
 
 export interface LatLng {

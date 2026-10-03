@@ -6,10 +6,15 @@ import { seededRandom } from '../utils/svgPath.ts'
 
 const TAU = Math.PI * 2
 
+// Rough running-time model: flat pace plus a minute per 100 m of climbing.
+const MIN_PER_KM = 5.8
+const minutesFor = (km: number, gain: number) => km * MIN_PER_KM + gain / 100
+
 interface Template {
   difficulty: Difficulty
   terrain: string
-  km: number
+  /** Multiplier on the requested distance, so the three routes land close to it. */
+  distanceFactor: number
   /** Share of the requested min→max range this route climbs through. */
   band: number
   /** Number of climbs along the way. */
@@ -19,9 +24,10 @@ interface Template {
 }
 
 const TEMPLATES: Template[] = [
-  { difficulty: 'easy', terrain: 'Paved paths', km: 4.2, band: 0.45, humps: 2, heading: 15, seed: 3 },
-  { difficulty: 'medium', terrain: 'Mixed terrain', km: 6.4, band: 0.8, humps: 3, heading: -5, seed: 7 },
-  { difficulty: 'hard', terrain: 'Forest trails', km: 8.1, band: 1, humps: 5, heading: -15, seed: 11 },
+  // Difficulty comes from climbing (band/humps), not length: all three are about the requested distance.
+  { difficulty: 'easy', terrain: 'Paved paths', distanceFactor: 0.95, band: 0.45, humps: 2, heading: 15, seed: 3 },
+  { difficulty: 'medium', terrain: 'Mixed terrain', distanceFactor: 1, band: 0.8, humps: 3, heading: -5, seed: 7 },
+  { difficulty: 'hard', terrain: 'Forest trails', distanceFactor: 1.05, band: 1, humps: 5, heading: -15, seed: 11 },
 ]
 
 /** A wobbly closed loop that starts and ends at `start`, roughly `km` long. */
@@ -64,31 +70,38 @@ export function mockGenerateRoutes(req: RouteRequest): RouteResponse {
   const area = lookupArea(req.postalCode)
   const code = req.postalCode.replace(/\s/g, '')
 
-  const routes: GeneratedRoute[] = TEMPLATES.flatMap((t, idx): GeneratedRoute[] => {
-    const templatePath = buildLoop(area.start, t.km, t.seed, t.heading)
-    const hi = req.minElevation + t.band * (req.maxElevation - req.minElevation)
-    const elevations = elevationProfile(templatePath.length, t, req.minElevation, hi, req.avgElevation)
-    const gain = Math.round(elevationGain(elevations))
-    const maxKm =
-      req.limit.type === 'distance'
-        ? req.limit.maxDistanceKm
-        : (req.limit.maxDurationMinutes - gain / 100) / 5.8
-    const km = Math.min(t.km, maxKm)
-    if (km <= 0) return []
+  const timeBudget = req.targetTime.hours * 60 + req.targetTime.minutes
 
-    const path = buildLoop(area.start, km, t.seed, t.heading)
+  const routes: GeneratedRoute[] = TEMPLATES.flatMap((t, idx): GeneratedRoute[] => {
+    const hi = req.minElevation + t.band * (req.maxElevation - req.minElevation)
+    const build = (km: number) => {
+      const path = buildLoop(area.start, km, t.seed, t.heading)
+      // Longer routes get more climbs (templates are tuned for ~6 km).
+      const shape = { ...t, humps: Math.max(1, Math.round((t.humps * km) / 6)) }
+      const elevations = elevationProfile(path.length, shape, req.minElevation, hi, req.avgElevation)
+      return { km, path, elevations, gain: Math.round(elevationGain(elevations)) }
+    }
+
+    let r = build(Math.round(req.targetDistanceKm * t.distanceFactor * 10) / 10)
+    // Too slow for the runner's time? Shorten the route to fit.
+    if (minutesFor(r.km, r.gain) > timeBudget) {
+      const fitKm = Math.floor(((timeBudget - r.gain / 100) / MIN_PER_KM) * 10) / 10
+      if (fitKm < 0.5) return []
+      r = build(fitKm)
+    }
+
     return [{
       id: `${code}-${t.difficulty}`,
       name: area.routeNames[idx],
       difficulty: t.difficulty,
       terrain: t.terrain,
-      distanceKm: Math.round(km * 10) / 10,
-      elevationGain: gain,
-      minElevation: Math.round(Math.min(...elevations)),
-      avgElevation: Math.round(elevations.reduce((a, b) => a + b, 0) / elevations.length),
-      maxElevation: Math.round(Math.max(...elevations)),
-      estimatedMinutes: Math.round(km * 5.8 + gain / 100),
-      points: path.map((p, i) => ({ ...p, elevation: Math.round(elevations[i] * 10) / 10 })),
+      distanceKm: r.km,
+      elevationGain: r.gain,
+      minElevation: Math.round(Math.min(...r.elevations)),
+      avgElevation: Math.round(r.elevations.reduce((a, b) => a + b, 0) / r.elevations.length),
+      maxElevation: Math.round(Math.max(...r.elevations)),
+      estimatedMinutes: Math.round(minutesFor(r.km, r.gain)),
+      points: r.path.map((p, i) => ({ ...p, elevation: Math.round(r.elevations[i] * 10) / 10 })),
     }]
   })
 
