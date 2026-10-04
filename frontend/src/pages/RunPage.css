@@ -152,6 +152,7 @@
   grid-auto-columns: 1fr;
   grid-auto-flow: column;
   gap: 16px;
+  margin-top: 24px;
 }
 
 .run__dialog-backdrop {
