@@ -7,6 +7,8 @@ export default defineConfig({
   server: {
     // Listen on the LAN so phones on the same Wi-Fi can open the dev server
     host: true,
+    // Allow Cloudflare tunnel URLs (HTTPS for testing GPS on a phone)
+    allowedHosts: ['.trycloudflare.com'],
     // Forward /api calls to the Python backend so we avoid CORS headaches in dev
     proxy: {
       '/api': 'http://localhost:8000',

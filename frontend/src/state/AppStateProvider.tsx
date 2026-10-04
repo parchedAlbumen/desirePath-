@@ -1,15 +1,20 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { SIM_SPEED } from '../config.ts'
 import { generateRoutes } from '../services/api.ts'
 import { stopSpeaking } from '../services/coach.ts'
 import { loadRuns, saveRuns } from '../services/history.ts'
 import type { GeneratedRoute, RouteRequest, RouteResponse, RunRecord } from '../types/route.ts'
-import { gradeAt, sampleRoute } from '../utils/geo.ts'
 import { AppStateContext, type AppState, type RunSession } from './context.ts'
+import { DEMO_MODE, SIM_SPEED } from '../config.ts'
+import { useGeolocation, type GpsFix } from '../hooks/useGeolocation.ts'
+import { gradeAt, haversineKm, sampleRoute } from '../utils/geo.ts'
 
-// Simulated runner until live GPS is wired up: 6:05 min/km on the flat, slower uphill.
+// Demo-mode runner: 6:05 min/km on the flat, slower uphill.
 const BASE_PACE_MIN_PER_KM = 6.08
 const TICK_MS = 500
+// Readings vaguer than this (in metres) are too rough to measure a run with.
+const MAX_ACCURACY_M = 30
+// Ignore moves under 5 m: GPS drifts a few metres even when you stand still.
+const MIN_STEP_KM = 0.005
 
 function advance(run: RunSession, dtMs: number): RunSession {
   const total = run.route.distanceKm
@@ -37,6 +42,23 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => saveRuns(history), [history])
 
+  // Every GPS reading comes through here; only trustworthy movement adds distance.
+  const addGpsFix = useCallback((fix: GpsFix) => {
+    setRun((r) => {
+      if (!r || r.mode !== 'gps' || r.status !== 'running') return r
+      if (fix.accuracy > MAX_ACCURACY_M) return r
+      const point = { lat: fix.lat, lng: fix.lng }
+      // First good reading: start measuring from here.
+      if (!r.position) return { ...r, position: point }
+      const stepKm = haversineKm(r.position, point)
+      if (stepKm < MIN_STEP_KM) return r
+      return { ...r, position: point, distanceKm: r.distanceKm + stepKm }
+    })
+  }, [])
+
+  // Lives here (not on the Run page) so tracking continues if the runner switches tabs.
+  const gpsWatch = useGeolocation(run?.mode === 'gps' && run.status === 'running', addGpsFix)
+
   const findRoutes = useCallback(async (req: RouteRequest) => {
     setLoading(true)
     try {
@@ -56,9 +78,13 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     let last = performance.now()
     const id = setInterval(() => {
       const now = performance.now()
-      const dt = (now - last) * SIM_SPEED
+      const dt = now - last
       last = now
-      setRun((r) => (r && r.status === 'running' ? advance(r, dt) : r))
+      setRun((r) => {
+        if (!r || r.status !== 'running') return r
+        // Demo: the simulator moves the runner. GPS: only the clock ticks; distance comes from addGpsFix.
+        return r.mode === 'demo' ? advance(r, dt * SIM_SPEED) : { ...r, elapsedMs: r.elapsedMs + dt }
+      })
     }, TICK_MS)
     return () => clearInterval(id)
   }, [running])
@@ -73,13 +99,19 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         startedAt: new Date().toISOString(),
         elapsedMs: 0,
         distanceKm: 0,
+        mode: DEMO_MODE ? 'demo' : 'gps',
+        position: null,
       })
     },
     [result],
   )
 
   const pauseRun = useCallback(() => setRun((r) => (r?.status === 'running' ? { ...r, status: 'paused' } : r)), [])
-  const resumeRun = useCallback(() => setRun((r) => (r?.status === 'paused' ? { ...r, status: 'running' } : r)), [])
+  // Clearing position on resume means walking around while paused doesn't count as distance.
+  const resumeRun = useCallback(
+    () => setRun((r) => (r?.status === 'paused' ? { ...r, status: 'running', position: null } : r)),
+    [],
+  )
 
   const endRun = useCallback(() => {
     stopSpeaking()
@@ -116,11 +148,27 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       pauseRun,
       resumeRun,
       endRun,
+      gps: { accuracy: gpsWatch.fix?.accuracy ?? null, error: gpsWatch.error },
       history,
       coachOn,
       setCoachOn,
     }),
-    [request, result, selectedRouteId, loading, findRoutes, run, startRun, pauseRun, resumeRun, endRun, history, coachOn],
+    [
+      request,
+      result,
+      selectedRouteId,
+      loading,
+      findRoutes,
+      run,
+      startRun,
+      pauseRun,
+      resumeRun,
+      endRun,
+      gpsWatch.fix,
+      gpsWatch.error,
+      history,
+      coachOn,
+    ],
   )
 
   return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>
