@@ -141,3 +141,12 @@ def test_ors_404_means_no_walkable_path(monkeypatch):
     monkeypatch.setattr(ors, "ORS_API_KEY", "k")
     with pytest.raises(ors.NoRoutablePath):
         ors.round_trip(49.0, -122.0, 5, 1)
+
+
+def test_validation_failures_are_logged_without_values(caplog):
+    caplog.set_level("INFO", logger="app.errors")
+    r = client.post("/api/routes/generate", json={**BODY, "postalCode": "SECRET-12345"})
+    assert r.status_code == 422 and r.json()["detail"]  # response is unchanged
+    logged = " ".join(rec.getMessage() for rec in caplog.records)
+    assert "422 on POST /api/routes/generate" in logged and "postalCode" in logged
+    assert "SECRET-12345" not in logged

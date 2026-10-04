@@ -1,17 +1,22 @@
 import type { RouteRequest, RouteResponse } from '../types/route.ts'
+import { errorFromNetwork, errorFromResponse } from './httpError.ts'
 import { mockGenerateRoutes } from './mockRoutes.ts'
 
 // Relative URL: Vite proxies /api to the Python backend on :8000 in dev.
 const BASE = '/api'
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
-    ...init,
-  })
-  if (!res.ok) {
-    throw new Error(`${init?.method ?? 'GET'} ${path} failed: ${res.status}`)
+  const what = `${init?.method ?? 'GET'} ${path}`
+  let res: Response
+  try {
+    res = await fetch(`${BASE}${path}`, {
+      headers: { 'Content-Type': 'application/json' },
+      ...init,
+    })
+  } catch (cause) {
+    throw errorFromNetwork(what, cause)
   }
+  if (!res.ok) throw await errorFromResponse(res, what)
   return res.json() as Promise<T>
 }
 
@@ -25,7 +30,7 @@ export async function generateRoutes(body: RouteRequest): Promise<RouteResponse>
     })
   } catch (err) {
     // Backend not running or endpoint not built yet: keep the UI demoable.
-    console.info('[api] Using mock routes:', err)
+    console.warn('[api] Using mock routes because the backend failed:', err instanceof Error ? err.message : err)
     await delay(600)
     return mockGenerateRoutes(body)
   }
