@@ -86,6 +86,34 @@
   margin-top: 28px;
 }
 
+.plan__location {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.plan__location svg {
+  width: 18px;
+  height: 18px;
+}
+
+.plan__location.is-selected {
+  border-color: var(--secondary);
+  color: var(--secondary-ink);
+}
+
+.plan__postal-choice {
+  display: block;
+  margin: 8px auto 0;
+  padding: 4px 8px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .ground-card {
   display: grid;
   grid-template-columns: 1.4fr 1fr;
