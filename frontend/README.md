@@ -1,5 +1,26 @@
 # React + Vite
 
+## Authentication API contract
+
+The sign-up and login screens send JSON to the backend:
+
+- `POST /api/auth/signup` to create an account
+- `POST /api/auth/login` to sign in
+
+Both requests use `Content-Type: application/json` and the same body:
+
+```json
+{
+  "email": "runner@example.com",
+  "password": "your-password"
+}
+```
+
+The frontend treats any 2xx response as success and displays a non-2xx or network error to the user. The Vite development server proxies `/api` to `http://localhost:8000`.
+After a successful response, the frontend stores a tab-scoped sign-in marker so the shared sign-in/log-out control updates across pages. This is UI state only; replace it with the backend's authenticated session mechanism when one is implemented.
+
+Completed runs are kept in browser storage. Favorite run IDs are saved separately in local storage, scoped to the signed-in email on this browser, so favoriting a run does not remove it from recent runs.
+
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 
 Currently, two official plugins are available:

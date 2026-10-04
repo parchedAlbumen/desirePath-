@@ -68,6 +68,59 @@ a {
   background: var(--bg);
 }
 
+.account-bar {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 8px var(--gutter) 0;
+}
+
+.account-bar__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.account-bar__button {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s, color 0.15s;
+}
+
+.account-bar__button:hover {
+  border-color: var(--lime);
+  color: var(--lime);
+}
+
+.account-bar__button--primary {
+  border-color: var(--lime);
+  background: var(--lime);
+  color: var(--lime-ink);
+}
+
+.account-bar__button--primary:hover {
+  background: var(--lime);
+  color: var(--lime-ink);
+  filter: brightness(1.05);
+}
+
+.account-bar__button svg {
+  width: 15px;
+  height: 15px;
+}
+
 .page {
   padding: calc(28px + env(safe-area-inset-top)) var(--gutter) 40px;
 }

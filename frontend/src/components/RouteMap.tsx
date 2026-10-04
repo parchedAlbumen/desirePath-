@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from 'react'
+import { useMemo, type ReactNode, type Ref } from 'react'
 import type { LatLng } from '../types/route.ts'
 import { fitProjection } from '../utils/geo.ts'
 import { blobRing, smoothPath, type Pt } from '../utils/svgPath.ts'
@@ -22,6 +22,7 @@ interface RouteMapProps {
   showScale?: boolean
   variant?: 'full' | 'thumb'
   className?: string
+  svgRef?: Ref<SVGSVGElement>
   /** HTML overlays (chips, buttons) positioned by the caller. */
   children?: ReactNode
 }
@@ -43,6 +44,7 @@ export function RouteMap({
   showScale,
   variant = 'full',
   className = '',
+  svgRef,
   children,
 }: RouteMapProps) {
   const thumb = variant === 'thumb'
@@ -104,7 +106,7 @@ export function RouteMap({
 
   return (
     <div className={`route-map route-map--${variant} ${className}`} style={{ aspectRatio: `${W} / ${height}` }}>
-      <svg viewBox={`0 0 ${W} ${height}`} preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <svg ref={svgRef} viewBox={`0 0 ${W} ${height}`} preserveAspectRatio="xMidYMid slice" aria-hidden="true">
         <rect width={W} height={height} className="route-map__ground" />
         <path d={smoothPath(blobRing(W * 0.85, height * 1.05, 260, 99, 0.08), true)} className="route-map__shade" />
         {decor.contours.map((d, i) => (

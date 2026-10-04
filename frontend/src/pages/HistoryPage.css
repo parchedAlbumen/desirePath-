@@ -58,6 +58,31 @@
   font-weight: 500;
 }
 
+.history__favorite-count {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.history__favorites-empty {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 20px;
+  color: var(--muted);
+}
+
+.history__favorites-empty svg {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  color: var(--lime);
+}
+
+.history__favorites-empty p {
+  margin: 0;
+  font-size: 14px;
+}
+
 .history__list {
   display: flex;
   flex-direction: column;
@@ -72,6 +97,11 @@
   align-items: center;
   gap: 20px;
   padding: 18px 20px;
+  border: 1px solid transparent;
+}
+
+.run-item.is-selected {
+  border-color: var(--lime);
 }
 
 .run-item__map {
@@ -101,6 +131,82 @@
   text-overflow: ellipsis;
 }
 
+.run-item__title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.run-item__title h3 {
+  min-width: 0;
+}
+
+.run-item__favorite {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin: -2px -8px 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.run-item__favorite:hover,
+.run-item__favorite.is-favorite {
+  background: var(--lime-soft);
+  color: var(--lime);
+}
+
+.run-item__favorite svg {
+  width: 19px;
+  height: 19px;
+}
+
+.run-item__select {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.run-item__select:focus-visible {
+  outline: 2px solid var(--lime);
+  outline-offset: 4px;
+}
+
+.history__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.run-item__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.run-item__actions .btn {
+  min-height: 38px;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
 .run-item__stats {
   display: flex;
   justify-content: space-between;
@@ -122,6 +228,19 @@
 .run-item__stats dt {
   order: 1;
   font-size: 12px;
+  color: var(--muted);
+}
+
+.history__shared {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+}
+
+.history__message {
+  overflow-wrap: anywhere;
+  margin: 16px 0 0;
   color: var(--muted);
 }
 
@@ -160,4 +279,24 @@
   margin: 4px 0 0;
   font-size: 14px;
   color: var(--muted);
+}
+
+@media (max-width: 560px) {
+  .run-item {
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .run-item__map {
+    width: 82px;
+  }
+
+  .run-item__actions {
+    gap: 6px;
+  }
+
+  .run-item__actions .btn {
+    flex: 1 1 auto;
+  }
 }

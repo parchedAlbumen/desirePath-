@@ -97,6 +97,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         distanceKm: Math.round(run.distanceKm * 100) / 100,
         elevationGain: Math.round(route.elevationGain * fraction),
         points: [...done, sampleRoute(route.points, fraction)].map(({ lat, lng }) => ({ lat, lng })),
+        plannedRoute: route,
       }
       setHistory((h) => [record, ...h])
     }

@@ -5,6 +5,29 @@ import { lookupArea } from '../utils/areas.ts'
 import { buildLoop } from './mockRoutes.ts'
 
 const KEY = 'desirepath.runs.v1'
+const FAVORITES_KEY = 'desirepath.favorite-runs.v1'
+
+function favoritesKey(email: string | null): string {
+  const user = email?.trim().toLowerCase()
+  return `${FAVORITES_KEY}.${user ? encodeURIComponent(user) : 'anonymous'}`
+}
+
+export function loadFavoriteRunIds(email: string | null): string[] {
+  try {
+    const raw = localStorage.getItem(favoritesKey(email))
+    if (!raw) return []
+    const parsed: unknown = JSON.parse(raw)
+    if (Array.isArray(parsed) && parsed.every((id): id is string => typeof id === 'string')) return parsed
+    throw new Error('Saved favorite runs are not a list of run IDs.')
+  } catch (error) {
+    console.warn('[history] Could not load favorite runs:', error)
+    return []
+  }
+}
+
+export function saveFavoriteRunIds(email: string | null, ids: string[]): void {
+  localStorage.setItem(favoritesKey(email), JSON.stringify(ids))
+}
 
 export function loadRuns(): RunRecord[] {
   try {
