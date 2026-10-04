@@ -1,11 +1,17 @@
-// Run history lives in localStorage for now. Swap these for /api/runs calls once the
-// backend stores runs in Tiger Data.
+// Run history lives in browser storage for now. Scope it to the signed-in email until
+// the backend stores authenticated runs.
 import type { RunRecord } from '../types/route.ts'
 import { lookupArea } from '../utils/areas.ts'
 import { buildLoop } from './mockRoutes.ts'
 
 const KEY = 'desirepath.runs.v1'
 const FAVORITES_KEY = 'desirepath.favorite-runs.v1'
+export const MAX_SAVED_RUNS = 2
+
+function runsKey(email: string | null): string {
+  const user = email?.trim().toLowerCase()
+  return user ? `${KEY}.${encodeURIComponent(user)}` : KEY
+}
 
 function favoritesKey(email: string | null): string {
   const user = email?.trim().toLowerCase()
@@ -29,21 +35,29 @@ export function saveFavoriteRunIds(email: string | null, ids: string[]): void {
   localStorage.setItem(favoritesKey(email), JSON.stringify(ids))
 }
 
-export function loadRuns(): RunRecord[] {
-  try {
-    const raw = localStorage.getItem(KEY)
-    if (raw) return JSON.parse(raw) as RunRecord[]
-  } catch {
-    // Private mode or corrupted data: fall through to the demo runs.
-  }
-  return demoRuns()
+export function mostRecentRuns(runs: RunRecord[]): RunRecord[] {
+  return [...runs].sort((a, b) => b.startedAt.localeCompare(a.startedAt)).slice(0, MAX_SAVED_RUNS)
 }
 
-export function saveRuns(runs: RunRecord[]): void {
+export function loadRuns(email: string | null): RunRecord[] {
   try {
-    localStorage.setItem(KEY, JSON.stringify(runs))
-  } catch {
-    // Storage full or blocked; history just won't persist across reloads.
+    const raw = localStorage.getItem(runsKey(email))
+    if (raw) {
+      const parsed: unknown = JSON.parse(raw)
+      if (Array.isArray(parsed)) return mostRecentRuns(parsed as RunRecord[])
+      throw new Error('Saved run history is not a list.')
+    }
+  } catch (error) {
+    console.warn('[history] Could not load run history:', error)
+  }
+  return email ? [] : demoRuns()
+}
+
+export function saveRuns(email: string | null, runs: RunRecord[]): void {
+  try {
+    localStorage.setItem(runsKey(email), JSON.stringify(mostRecentRuns(runs)))
+  } catch (error) {
+    console.warn('[history] Could not save run history:', error)
   }
 }
 

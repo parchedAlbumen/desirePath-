@@ -19,6 +19,7 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(
     () => sessionStorage.getItem(AUTH_SESSION_KEY) === 'true',
   )
+  const accountEmail = isAuthenticated ? sessionStorage.getItem(AUTH_EMAIL_KEY) : null
 
   const onAuthenticated = (email: string) => {
     sessionStorage.setItem(AUTH_SESSION_KEY, 'true')
@@ -34,7 +35,7 @@ function App() {
   }
 
   return (
-    <AppStateProvider>
+    <AppStateProvider key={accountEmail ?? 'anonymous'} userEmail={accountEmail}>
       <div className="app">
         <header className="account-bar">
           {isAuthenticated ? (
