@@ -29,11 +29,11 @@ const loop = smoothPath(
 export function TopoArt() {
   return (
     <svg className="topo-art" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-      <rect width={W} height={H} fill="#e9eef5" />
+      <rect width={W} height={H} fill="#182035" />
       {contours.map((d, i) => (
-        <path key={i} d={d} fill="none" stroke="rgba(15,23,42,0.1)" strokeWidth={1} />
+        <path key={i} d={d} fill="none" stroke="rgba(255,255,255,0.09)" strokeWidth={1} />
       ))}
-      <path d={road} fill="none" stroke="#cbd5e1" strokeWidth={6} strokeLinecap="round" />
+      <path d={road} fill="none" stroke="#3c4664" strokeWidth={6} strokeLinecap="round" />
       <path d={loop} fill="none" stroke={PRIMARY} strokeWidth={3} strokeLinejoin="round" />
     </svg>
   )

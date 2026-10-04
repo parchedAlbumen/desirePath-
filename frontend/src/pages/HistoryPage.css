@@ -1,9 +1,10 @@
 .big-picture {
   padding: 22px 24px 20px;
-  border: 1px solid var(--primary);
+  /* Navy tinted with the orange highlight (the original used a lime-tinted card) */
+  border: 1px solid rgba(244, 162, 97, 0.28);
   border-radius: var(--radius-lg);
-  background: var(--primary);
-  color: var(--primary-ink);
+  background: #252433;
+  color: var(--text);
 }
 
 .big-picture header {

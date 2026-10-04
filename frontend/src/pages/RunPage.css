@@ -14,8 +14,8 @@
   gap: 4px;
   padding: 12px 16px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
+  background: rgba(10, 14, 26, 0.88);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   font-size: 13px;
   color: var(--muted);
 }
@@ -72,7 +72,7 @@
 }
 
 .status-pill--paused {
-  background: rgba(202, 138, 4, 0.12);
+  background: rgba(250, 204, 21, 0.14);
   color: var(--medium);
 }
 
@@ -163,7 +163,7 @@
   display: grid;
   place-items: center;
   padding: 24px;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(5, 10, 30, 0.7);
 }
 
 .run__dialog {

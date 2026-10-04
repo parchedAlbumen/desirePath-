@@ -33,7 +33,7 @@ export function LiveMap({ routes, height }: LiveMapProps) {
   return (
     <MapContainer center={[start.lat, start.lng]} zoom={14} style={{ height }}>
       <TileLayer
-        url="https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png"
+        url="https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
         attribution="&copy; Stadia Maps &copy; OpenMapTiles &copy; OpenStreetMap contributors"
       />
         <FitBounds routes={routes} />

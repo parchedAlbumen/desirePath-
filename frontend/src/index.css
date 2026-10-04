@@ -1,29 +1,29 @@
 /* Design tokens (from the Figma mockups). The app is dark-only by design. */
 :root {
-  /* Light theme: navy primary, warm orange secondary, light blue accent */
-  --bg: #f8fafc;
-  --surface: #ffffff;
-  --surface-2: #eef2f7;
-  --border: #e2e8f0;
-  --text: #0f172a;
-  --muted: #64748b;
-  --placeholder: #94a3b8;
+  /* Navy-grey + orange: the original dark design, with navy-tinted greys and orange instead of lime */
+  --bg: #0a0e1a; /* near-black with a navy hue */
+  --surface: #151b2c; /* cards / "floating rectangles": navy-tinted grey */
+  --surface-2: #1d2539; /* a step lighter, e.g. highlight bands, secondary buttons */
+  --border: #2a3350;
+  --text: #f3f4f7;
+  --muted: #8c95ab;
+  --placeholder: #5d6680;
 
-  --primary: #172554; /* deep navy: buttons, logo, selected states */
-  --primary-ink: #ffffff; /* text on primary */
-  --primary-soft: rgba(23, 37, 84, 0.08);
-  --primary-tint: #f1f4fa; /* solid soft navy, e.g. selected card */
+  --primary: #f4a261; /* orange highlight: buttons, selected states, route lines (was lime) */
+  --primary-ink: #0a0e1a; /* near-black text on orange */
+  --primary-soft: rgba(244, 162, 97, 0.14);
+  --primary-tint: #1d1d2a; /* selected card background: grey with a hint of orange */
 
-  --secondary: #f4a261; /* warm orange: highlights (nav underline, active chip, running pill) */
-  --secondary-ink: #9a4b12; /* readable orange for text on light backgrounds */
-  --secondary-soft: rgba(244, 162, 97, 0.18);
+  --secondary: #f4a261; /* same orange, so every highlight matches */
+  --secondary-ink: #f4a261;
+  --secondary-soft: rgba(244, 162, 97, 0.14);
 
-  --accent: #38bdf8; /* light blue: small details (GPS dot, focus rings) */
+  --accent: #f4a261; /* GPS dot, focus rings: orange too, like the lime was */
 
-  --easy: #16a34a;
-  --medium: #ca8a04;
-  --hard: #dc2626;
-  --map-ground: #e9eef5;
+  --easy: #4ade80;
+  --medium: #facc15;
+  --hard: #f87171;
+  --map-ground: #182035;
 
   --radius: 14px;
   --radius-lg: 20px;
@@ -36,7 +36,7 @@
   line-height: 1.4;
   color: var(--text);
   background: var(--bg);
-  color-scheme: light;
+  color-scheme: dark;
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
 }
@@ -110,8 +110,10 @@ a {
   height: 28px;
   place-items: center;
   border-radius: 8px;
-  background: var(--primary);
-  color: var(--primary-ink);
+  /* Logo: orange icon on a navy tile (border keeps the tile visible on the dark page) */
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--primary);
 }
 
 .account-bar__mark svg {
@@ -169,7 +171,7 @@ a {
   border: 1px solid var(--primary);
   border-radius: 999px;
   background: var(--surface);
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
   font-size: 14px;
   font-weight: 500;
   color: var(--text);
@@ -290,8 +292,9 @@ a {
   width: 60px;
   height: 60px;
   border-radius: 16px;
-  background: var(--primary);
-  color: var(--primary-ink);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--primary);
 }
 
 .logo__mark svg {
@@ -430,17 +433,17 @@ a {
 }
 
 .badge--easy {
-  background: rgba(22, 163, 74, 0.1);
+  background: rgba(74, 222, 128, 0.14);
   color: var(--easy);
 }
 
 .badge--medium {
-  background: rgba(202, 138, 4, 0.12);
+  background: rgba(250, 204, 21, 0.14);
   color: var(--medium);
 }
 
 .badge--hard {
-  background: rgba(220, 38, 38, 0.1);
+  background: rgba(248, 113, 113, 0.14);
   color: var(--hard);
 }
 
@@ -616,7 +619,7 @@ a {
   height: calc(var(--nav-height) + env(safe-area-inset-bottom));
   padding-bottom: env(safe-area-inset-bottom);
   border-top: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.96);
+  background: rgba(10, 14, 26, 0.96);
   backdrop-filter: blur(12px);
   transform: translateX(-50%);
 }
