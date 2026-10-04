@@ -1,3 +1,4 @@
+import httpx
 import pytest
 from fastapi.testclient import TestClient
 
@@ -82,3 +83,61 @@ def test_unknown_postal_code(monkeypatch):
 def test_missing_api_key_is_503(monkeypatch):
     monkeypatch.setattr(ors, "ORS_API_KEY", None)
     assert client.post("/api/routes/generate", json=BODY).status_code == 503
+
+
+@pytest.mark.parametrize("error, status", [
+    (ors.ORSConfigError("bad key"), 503),
+    (ors.ORSRateLimited("slow down", retry_after=30), 429),
+    (ors.ORSTimeout("slow"), 504),
+    (ors.NoRoutablePath("no path"), 422),
+    (ors.ORSError("boom"), 502),
+])
+def test_ors_failures_map_to_status_codes(monkeypatch, error, status):
+    monkeypatch.setattr(geocode, "geocode_postal", lambda code: ors.Place(49.278, -122.92, "Burnaby Mountain", "Burnaby, BC"))
+
+    def fail(*args, **kwargs):
+        raise error
+    monkeypatch.setattr(ors, "round_trip", fail)
+    r = client.post("/api/routes/generate", json=BODY)
+    assert r.status_code == status
+    assert "detail" in r.json()
+    if status == 429:
+        assert r.headers["Retry-After"] == "30"
+
+
+def test_ors_retries_transient_failures_once(monkeypatch):
+    calls = []
+
+    def flaky(method, url, **kwargs):
+        calls.append(url)
+        if len(calls) == 1:
+            raise httpx.ConnectError("down")
+        return httpx.Response(200, request=httpx.Request(method, url), json={"features": []})
+
+    monkeypatch.setattr(ors.httpx, "request", flaky)
+    monkeypatch.setattr(ors, "ORS_API_KEY", "k")
+    monkeypatch.setattr(ors, "RETRY_DELAY_S", 0)
+    with pytest.raises(ors.NotFound):
+        ors.geocode_postal("V5A1S6")
+    assert len(calls) == 2
+
+
+def test_ors_429_is_not_retried(monkeypatch):
+    calls = []
+
+    def limited(method, url, **kwargs):
+        calls.append(url)
+        return httpx.Response(429, request=httpx.Request(method, url), headers={"Retry-After": "42"})
+
+    monkeypatch.setattr(ors.httpx, "request", limited)
+    monkeypatch.setattr(ors, "ORS_API_KEY", "k")
+    with pytest.raises(ors.ORSRateLimited) as exc:
+        ors.geocode_postal("V5A1S6")
+    assert len(calls) == 1 and exc.value.retry_after == 42
+
+
+def test_ors_404_means_no_walkable_path(monkeypatch):
+    monkeypatch.setattr(ors.httpx, "request", lambda m, u, **kw: httpx.Response(404, request=httpx.Request(m, u)))
+    monkeypatch.setattr(ors, "ORS_API_KEY", "k")
+    with pytest.raises(ors.NoRoutablePath):
+        ors.round_trip(49.0, -122.0, 5, 1)

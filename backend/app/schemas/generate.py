@@ -24,17 +24,29 @@ class TargetTime(CamelModel):
 
 
 class GenerateRequest(CamelModel):
-    postal_code: str
+    postal_code: str | None = None  # optional when the user shares their location instead
+    start_lat: float | None = Field(default=None, ge=-90, le=90)
+    start_lng: float | None = Field(default=None, ge=-180, le=180)
     target_distance_km: float | None = Field(default=None, gt=0)
     target_time: TargetTime | None = None
     min_elevation: float
     avg_elevation: float
     max_elevation: float
 
+    @property
+    def uses_gps(self) -> bool:
+        return self.start_lat is not None and self.start_lng is not None
+
     @model_validator(mode="after")
     def _check(self):
-        if not POSTAL_RE.match(self.postal_code.strip()):
-            raise ValueError("postalCode must be a valid Canadian postal code, e.g. V5A 1S6")
+        if (self.start_lat is None) != (self.start_lng is None):
+            raise ValueError("startLat and startLng must be given together")
+        # Coordinates win over the postal code, so a sloppy postal code can't break a GPS request.
+        if not self.uses_gps:
+            if not self.postal_code:
+                raise ValueError("provide postalCode, or startLat and startLng")
+            if not POSTAL_RE.match(self.postal_code.strip()):
+                raise ValueError("postalCode must be a valid Canadian postal code, e.g. V5A 1S6")
         if not self.min_elevation <= self.avg_elevation <= self.max_elevation:
             raise ValueError("elevations must satisfy minElevation <= avgElevation <= maxElevation")
         if not self.target_distance_km and not (self.target_time and self.target_time.total_minutes > 0):
