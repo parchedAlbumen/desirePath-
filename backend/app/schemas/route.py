@@ -2,6 +2,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
+from app.schemas.generate import Difficulty
+
 
 class RoutePoint(BaseModel):
     lat: float
@@ -14,6 +16,10 @@ class RouteBase(BaseModel):
     distance: float = Field(gt=0)
     elevation_gain: int = Field(default=0, ge=0)
     elevation_loss: int = Field(default=0, ge=0)
+    # Copied from the generated route when it's saved; optional, so older rows are NULL
+    difficulty: Difficulty | None = None
+    terrain: str | None = None
+    estimated_minutes: int | None = Field(default=None, ge=0)
 
 
 class RouteCreate(RouteBase):
@@ -26,6 +32,9 @@ class RouteUpdate(BaseModel):
     distance: float | None = Field(default=None, gt=0)
     elevation_gain: int | None = Field(default=None, ge=0)
     elevation_loss: int | None = Field(default=None, ge=0)
+    difficulty: Difficulty | None = None
+    terrain: str | None = None
+    estimated_minutes: int | None = Field(default=None, ge=0)
     points: list[RoutePoint] | None = None  # if given, replaces all points
 
 
