@@ -67,8 +67,21 @@ function elevationProfile(count: number, t: Template, lo: number, hi: number, ta
 }
 
 export function mockGenerateRoutes(req: RouteRequest): RouteResponse {
-  const area = lookupArea(req.postalCode)
-  const code = req.postalCode.replace(/\s/g, '')
+  const gpsStart =
+    req.startLat != null && req.startLng != null
+      ? { lat: req.startLat, lng: req.startLng }
+      : null
+  const area = gpsStart
+    ? {
+        ...lookupArea(''),
+        name: 'Your location',
+        region: 'Canada',
+        startLabel: 'Your location',
+        start: gpsStart,
+        routeNames: ['Nearby Easy Loop', 'Nearby Steady Loop', 'Nearby Hill Loop'] as [string, string, string],
+      }
+    : lookupArea(req.postalCode ?? '')
+  const code = gpsStart ? 'gps' : (req.postalCode ?? '').replace(/\s/g, '')
 
   const timeBudget = req.targetTime.hours * 60 + req.targetTime.minutes
 

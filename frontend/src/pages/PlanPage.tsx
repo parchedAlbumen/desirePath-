@@ -1,4 +1,4 @@
-import { ArrowUpRight, MapPin } from 'lucide-react'
+import { ArrowUpRight, MapPin, Navigation } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { NumberStepper } from '../components/NumberStepper.tsx'
@@ -6,6 +6,7 @@ import { WheelPicker } from '../components/WheelPicker.tsx'
 import { TopoArt } from '../components/TopoArt.tsx'
 import { useAppState } from '../hooks/useAppState.ts'
 import { formatPostalCode, isValidPostalCode, lookupArea } from '../utils/areas.ts'
+import type { LatLng } from '../types/route.ts'
 import './PlanPage.css'
 
 const MAX_ELEVATION = 6000
@@ -31,13 +32,24 @@ export function PlanPage() {
   const [minutes, setMinutes] = useState(String(request?.targetTime.minutes ?? 45))
   const [submitted, setSubmitted] = useState(false)
   const [generateError, setGenerateError] = useState<string | null>(null)
+  const [currentLocation, setCurrentLocation] = useState<LatLng | null>(() =>
+    request?.startLat != null && request.startLng != null
+      ? { lat: request.startLat, lng: request.startLng }
+      : null,
+  )
+  const [useCurrentLocation, setUseCurrentLocation] = useState(
+    request?.startLat != null && request.startLng != null,
+  )
+  const [locating, setLocating] = useState(false)
+  const [locationError, setLocationError] = useState<string | null>(null)
 
   const [min, avg, max] = [minE, avgE, maxE].map((v) => parseInt(v, 10))
   const km = parseFloat(distance)
   const [h, m] = [hours, minutes].map((v) => parseInt(v, 10))
   const totalMinutes = h * 60 + m
 
-  const postalError = isValidPostalCode(postal) ? null : 'Enter a Canadian postal code like V5A 1S6.'
+  const postalError =
+    useCurrentLocation || isValidPostalCode(postal) ? null : 'Enter a Canadian postal code like V5A 1S6.'
   const distanceError =
     Number.isNaN(km) ? 'Enter how far you want to run.'
     : km < MIN_DISTANCE_KM || km > MAX_DISTANCE_KM ? `Pick a distance between ${MIN_DISTANCE_KM} and ${MAX_DISTANCE_KM} km.`
@@ -55,17 +67,52 @@ export function PlanPage() {
     : !(min <= avg && avg <= max) ? 'Keep min ≤ average ≤ max.'
     : null
 
-  const area = lookupArea(postal)
+  const area = useCurrentLocation
+    ? { name: 'Your current location', tagline: 'Routes will start from your GPS position.' }
+    : lookupArea(postal)
   const showPostalError = submitted && !!postalError
+
+  const onUseCurrentLocation = () => {
+    setLocationError(null)
+    if (!window.isSecureContext) {
+      setLocationError('Current location requires a secure connection (HTTPS or localhost).')
+      return
+    }
+    if (!('geolocation' in navigator)) {
+      setLocationError('This browser does not support location services.')
+      return
+    }
+
+    setLocating(true)
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        setCurrentLocation({ lat: coords.latitude, lng: coords.longitude })
+        setUseCurrentLocation(true)
+        setLocationError(null)
+        setLocating(false)
+      },
+      (error) => {
+        const message =
+          error.code === error.PERMISSION_DENIED ? 'Location permission was denied. Allow location access in your browser settings and try again.'
+          : error.code === error.POSITION_UNAVAILABLE ? 'Your current location could not be determined. Try again or enter a postal code.'
+          : 'Getting your location took too long. Try again or enter a postal code.'
+        setLocationError(message)
+        setLocating(false)
+      },
+      { enableHighAccuracy: true, maximumAge: 30_000, timeout: 15_000 },
+    )
+  }
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setSubmitted(true)
-    if (postalError || distanceError || timeError || elevationError) return
+    if (postalError || distanceError || timeError || elevationError || (useCurrentLocation && !currentLocation)) return
     setGenerateError(null)
     try {
       await findRoutes({
-        postalCode: postal,
+        ...(useCurrentLocation && currentLocation
+          ? { startLat: currentLocation.lat, startLng: currentLocation.lng }
+          : { postalCode: postal }),
         targetDistanceKm: km,
         targetTime: { hours: h, minutes: m },
         minElevation: min,
@@ -97,7 +144,11 @@ export function PlanPage() {
               value={postal}
               aria-describedby={showPostalError ? 'postal-error' : undefined}
               aria-invalid={showPostalError || undefined}
-              onChange={(e) => setPostal(formatPostalCode(e.target.value))}
+              onChange={(e) => {
+                setPostal(formatPostalCode(e.target.value))
+                setUseCurrentLocation(false)
+                setLocationError(null)
+              }}
             />
             <span className="input-shell__suffix">CA</span>
           </div>
@@ -105,6 +156,33 @@ export function PlanPage() {
           {showPostalError && (
             <p id="postal-error" className="field__hint is-error" role="alert">
               {postalError}
+            </p>
+          )}
+          <button
+            type="button"
+            className={`btn btn--secondary plan__location${useCurrentLocation ? ' is-selected' : ''}`}
+            onClick={onUseCurrentLocation}
+            disabled={locating || loading}
+            aria-pressed={useCurrentLocation}
+          >
+            <Navigation aria-hidden="true" />
+            {locating ? 'Getting your location…' : useCurrentLocation ? 'Using your current location' : 'Use my current location'}
+          </button>
+          {useCurrentLocation && !locating && (
+            <button
+              type="button"
+              className="plan__postal-choice"
+              onClick={() => {
+                setUseCurrentLocation(false)
+                setLocationError(null)
+              }}
+            >
+              Use postal code instead
+            </button>
+          )}
+          {locationError && (
+            <p className="field__hint is-error" role="alert">
+              {locationError}
             </p>
           )}
         </div>

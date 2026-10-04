@@ -13,7 +13,11 @@ export interface Duration {
  * Elevations are metres above sea level.
  */
 export interface RouteRequest {
-  postalCode: string
+  /** Postal code is omitted when the runner shares their current location. */
+  postalCode?: string
+  /** GPS origin; both coordinates must be supplied together. */
+  startLat?: number
+  startLng?: number
   /** How far the runner wants to go. All three routes aim for this length. */
   targetDistanceKm: number
   /** How long the runner has. Routes shouldn't take longer than this. */
