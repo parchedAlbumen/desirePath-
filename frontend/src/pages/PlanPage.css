@@ -101,6 +101,30 @@
   color: var(--secondary-ink);
 }
 
+.plan__location-ready {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin: 12px 0 0;
+  padding: 12px;
+  border: 1px solid var(--secondary);
+  border-radius: var(--radius);
+  background: var(--secondary-soft);
+  color: var(--secondary-ink);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.plan__location-ready svg {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+}
+
+.plan__location-ready strong {
+  display: block;
+}
+
 .plan__postal-choice {
   display: block;
   margin: 8px auto 0;
