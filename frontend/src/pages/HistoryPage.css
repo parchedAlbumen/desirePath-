@@ -1,19 +1,17 @@
-.history .page-title {
-  margin-bottom: 28px;
-}
-
 .big-picture {
   padding: 22px 24px 20px;
-  border: 1px solid #3c4a26;
+  /* Navy tinted with the orange highlight (the original used a lime-tinted card) */
+  border: 1px solid rgba(244, 162, 97, 0.28);
   border-radius: var(--radius-lg);
-  background: #2c3a1f;
+  background: #252433;
+  color: var(--text);
 }
 
 .big-picture header {
   display: flex;
   justify-content: space-between;
   font-size: 14px;
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .big-picture dl {
@@ -42,7 +40,7 @@
   font-weight: 500;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: rgba(243, 245, 244, 0.75);
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .history__list-head {
@@ -75,7 +73,7 @@
   flex: none;
   width: 20px;
   height: 20px;
-  color: var(--lime);
+  color: var(--primary);
 }
 
 .history__favorites-empty p {
@@ -101,7 +99,7 @@
 }
 
 .run-item.is-selected {
-  border-color: var(--lime);
+  border-color: var(--primary);
 }
 
 .run-item__map {
@@ -160,8 +158,8 @@
 
 .run-item__favorite:hover,
 .run-item__favorite.is-favorite {
-  background: var(--lime-soft);
-  color: var(--lime);
+  background: var(--primary-soft);
+  color: var(--primary);
 }
 
 .run-item__favorite svg {
@@ -180,7 +178,7 @@
 }
 
 .run-item__select:focus-visible {
-  outline: 2px solid var(--lime);
+  outline: 2px solid var(--primary);
   outline-offset: 4px;
 }
 
@@ -268,7 +266,7 @@
   flex: none;
   width: 36px;
   height: 36px;
-  color: var(--lime);
+  color: var(--primary);
 }
 
 .history__footer strong {
@@ -299,4 +297,9 @@
   .run-item__actions .btn {
     flex: 1 1 auto;
   }
+}
+
+/* "THE BIG PICTURE" label sits on the navy card, so use the orange highlight */
+.big-picture .eyebrow {
+  color: var(--secondary);
 }

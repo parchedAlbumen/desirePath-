@@ -4,8 +4,9 @@
 
 .routes__list-head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
+  gap: 12px;
   margin-bottom: 16px;
 }
 
@@ -23,9 +24,9 @@
 }
 
 .route-card.is-selected {
-  border: 2px solid var(--lime);
+  border: 2px solid var(--primary);
   padding: 17px 17px 17px 19px;
-  background: #1a1e17;
+  background: var(--primary-tint);
 }
 
 .route-card__head {
@@ -57,7 +58,7 @@
 .route-card__check {
   width: 18px;
   height: 18px;
-  color: var(--lime);
+  color: var(--primary);
 }
 
 .route-card__body {

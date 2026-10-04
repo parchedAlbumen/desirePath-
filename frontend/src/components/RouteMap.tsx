@@ -139,7 +139,7 @@ export function RouteMap({
         {markerPos && (
           <g>
             <circle cx={markerPos[0]} cy={markerPos[1]} r={20} className="route-map__halo" />
-            <circle cx={markerPos[0]} cy={markerPos[1]} r={8} fill="#fff" />
+            <circle cx={markerPos[0]} cy={markerPos[1]} r={8} fill="#fff" className="route-map__marker-ring" />
             <circle cx={markerPos[0]} cy={markerPos[1]} r={4.5} className="route-map__start-dot" />
           </g>
         )}

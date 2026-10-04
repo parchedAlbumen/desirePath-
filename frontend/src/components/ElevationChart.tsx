@@ -1,5 +1,5 @@
 import { useId } from 'react'
-import { LIME } from '../utils/difficulty.ts'
+import { PRIMARY } from '../utils/difficulty.ts'
 import { smoothPath, type Pt } from '../utils/svgPath.ts'
 import './ElevationChart.css'
 
@@ -80,8 +80,8 @@ export function ElevationProfile({ values, progress, currentKm, totalKm, planned
             </linearGradient>
           </defs>
           <path d={`${line} L${w},${h} L0,${h} Z`} fill={`url(#${gradientId})`} />
-          <path d={line} fill="none" stroke="#5d6561" strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
-          <line x1={x} x2={x} y1={0} y2={y} stroke={LIME} strokeWidth={2} vectorEffect="non-scaling-stroke" />
+          <path d={line} fill="none" stroke="#69728a" strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
+          <line x1={x} x2={x} y1={0} y2={y} stroke={PRIMARY} strokeWidth={2} vectorEffect="non-scaling-stroke" />
         </svg>
         <span className="profile__dot" style={{ left: `${progress * 100}%`, top: `${(y / h) * 100}%` }} />
       </div>

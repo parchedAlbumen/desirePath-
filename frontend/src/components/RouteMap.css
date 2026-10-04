@@ -18,37 +18,45 @@
 }
 
 .route-map__shade {
-  fill: #18231c;
+  fill: #121a2c;
 }
 
 .route-map__contour {
   fill: none;
-  stroke: rgba(255, 255, 255, 0.075);
+  stroke: rgba(255, 255, 255, 0.07);
 }
 
 .route-map__road-edge {
   fill: none;
-  stroke: #66746c;
+  stroke: #3c4664;
   stroke-linecap: round;
-  opacity: 0.55;
+  opacity: 1;
 }
 
 .route-map__road {
   fill: none;
-  stroke: #3a4640;
+  stroke: #29324b;
   stroke-linecap: round;
 }
 
 .route-map__start-ring {
   fill: var(--bg);
+  stroke: var(--primary);
+  stroke-width: 2;
 }
 
 .route-map__start-dot {
-  fill: var(--lime);
+  fill: var(--primary);
+}
+
+/* White ring around the live position, outlined so it stands out on the light map */
+.route-map__marker-ring {
+  stroke: var(--primary);
+  stroke-width: 2;
 }
 
 .route-map__halo {
-  fill: var(--lime);
+  fill: var(--primary);
   opacity: 0.22;
 }
 
@@ -61,7 +69,8 @@
   padding: 7px 12px;
   border: 1px solid;
   border-radius: 8px;
-  background: rgba(11, 13, 12, 0.92);
+  background: rgba(10, 14, 26, 0.92);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   font-size: 13px;
   white-space: nowrap;
   pointer-events: none;
@@ -100,7 +109,8 @@
   gap: 8px;
   padding: 8px 14px;
   border-radius: 999px;
-  background: rgba(11, 13, 12, 0.85);
+  background: rgba(10, 14, 26, 0.85);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   font-size: 14px;
   color: var(--text);
 }
@@ -108,7 +118,7 @@
 .map-chip svg {
   width: 16px;
   height: 16px;
-  color: var(--lime);
+  color: var(--primary);
 }
 
 .map-label {
@@ -118,6 +128,6 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
   line-height: 1.35;
-  color: rgba(243, 245, 244, 0.55);
+  color: rgba(248, 250, 252, 0.55);
   pointer-events: none;
 }

@@ -6,7 +6,7 @@ import { RouteMap } from '../components/RouteMap.tsx'
 import { useAppState } from '../hooks/useAppState.ts'
 import { MIN_SAVE_KM } from '../config.ts'
 import type { RunSession } from '../state/context.ts'
-import { LIME } from '../utils/difficulty.ts'
+import { PRIMARY } from '../utils/difficulty.ts'
 import { formatDuration, formatPace } from '../utils/format.ts'
 import { sampleRoute } from '../utils/geo.ts'
 import './RunPage.css'
@@ -48,7 +48,7 @@ function LiveRun({ run }: { run: RunSession }) {
   const tooShort = run.distanceKm <= MIN_SAVE_KM
   const elapsedSec = run.elapsedMs / 1000
 
-  const mapRoutes = useMemo(() => [{ id: route.id, points: route.points, color: LIME, selected: true }], [route])
+  const mapRoutes = useMemo(() => [{ id: route.id, points: route.points, color: PRIMARY, selected: true }], [route])
   const elevations = useMemo(() => route.points.map((p) => p.elevation), [route])
 
   const onEnd = () => {
@@ -77,13 +77,6 @@ function LiveRun({ run }: { run: RunSession }) {
 
   return (
     <main className="run">
-      <header className="page-head">
-        <div>
-          <p className="crumb">Live run / {run.areaName}</p>
-          <h1 className="page-title">{finished ? 'Nice work.' : 'Keep moving.'}</h1>
-        </div>
-      </header>
-
       <RouteMap routes={mapRoutes} height={290} marker={run.position ?? here}>
         <span className="map-chip run__gps" style={{ left: 16, top: 16 }} title={gps.error ?? undefined}>
           <i aria-hidden="true" />

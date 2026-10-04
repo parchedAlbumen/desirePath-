@@ -15,10 +15,23 @@ const AUTH_SESSION_KEY = 'desirepath-authenticated'
 const AUTH_EMAIL_KEY = 'desirepath-user-email'
 const WELCOME_TOAST_MS = 3500
 
+/** Title shown top-left in the header bar. Plan + Routes both live under the Plan tab. */
+function pageTitle(pathname: string): string {
+  if (pathname.startsWith('/run')) return 'Run'
+  if (pathname.startsWith('/history')) return 'History'
+  return 'Desire Path'
+}
+
 function App() {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const isAuthPage = pathname === '/login' || pathname === '/signup'
+  const title = pageTitle(pathname)
+
+  // Each page should open at the top, not wherever the previous page was scrolled to.
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
   const [isAuthenticated, setIsAuthenticated] = useState(
     () => sessionStorage.getItem(AUTH_SESSION_KEY) === 'true',
   )
@@ -51,7 +64,17 @@ function App() {
   return (
     <AppStateProvider key={accountEmail ?? 'anonymous'}>
       <div className="app">
-        <header className={`account-bar${isAuthenticated ? ' account-bar--signed-in' : ''}`}>
+        <header className="account-bar">
+          {/* The page's own heading now lives here, so pages start straight with their content. */}
+          <h1 className="account-bar__title">
+            {title === 'Desire Path' && (
+              <span className="account-bar__mark" aria-hidden="true">
+                <RouteIcon strokeWidth={2.4} />
+              </span>
+            )}
+            {title}
+          </h1>
+
           {isAuthenticated ? (
             <>
               <div className="account-chip" title={accountEmail ?? undefined}>

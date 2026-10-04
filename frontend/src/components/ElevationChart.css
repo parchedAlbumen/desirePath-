@@ -58,7 +58,7 @@
   height: 9px;
   border: 2px solid var(--bg);
   border-radius: 50%;
-  background: var(--lime);
+  background: var(--accent);
   transform: translate(-50%, -50%);
 }
 
@@ -75,12 +75,12 @@
   align-items: center;
   gap: 6px;
   font-weight: 600;
-  color: var(--lime);
+  color: var(--primary);
 }
 
 .profile__you i {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: var(--lime);
+  background: var(--accent);
 }
