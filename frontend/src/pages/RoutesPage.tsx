@@ -1,14 +1,15 @@
-import { CircleCheck, MapPin, Play, SlidersHorizontal } from 'lucide-react'
+import { CircleCheck, Play, SlidersHorizontal } from 'lucide-react'
 import { useMemo } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { DifficultyBadge } from '../components/DifficultyBadge.tsx'
 import { Sparkline } from '../components/ElevationChart.tsx'
-import { RouteMap, type MapRoute } from '../components/RouteMap.tsx'
+import type { MapRoute } from '../components/RouteMap.tsx'
 import { useAppState } from '../hooks/useAppState.ts'
 import type { GeneratedRoute } from '../types/route.ts'
 import { DIFFICULTY_COLOR } from '../utils/difficulty.ts'
 import { formatTime } from '../utils/format.ts'
 import './RoutesPage.css'
+import { LiveMap } from '../components/LiveMap.tsx'
 
 export function RoutesPage() {
   const { request, result, selectedRouteId, selectRoute, startRun } = useAppState()
@@ -48,27 +49,7 @@ export function RoutesPage() {
         </button>
       </header>
 
-      <RouteMap
-        routes={mapRoutes}
-        height={400}
-        showScale
-        callout={
-          selected && {
-            routeId: selected.id,
-            title: selected.name,
-            subtitle: `${selected.distanceKm} km · ${selected.elevationGain} m gain`,
-            color: DIFFICULTY_COLOR[selected.difficulty],
-          }
-        }
-      >
-        <span className="map-label" style={{ left: 22, top: 22 }}>
-          {result.area.name}
-        </span>
-        <span className="map-chip" style={{ left: 16, bottom: 16 }}>
-          <MapPin aria-hidden="true" />
-          Start at {result.area.startLabel}
-        </span>
-      </RouteMap>
+      <LiveMap routes={mapRoutes} height={360} />
 
       <section className="routes__list">
         <div className="routes__list-head">
