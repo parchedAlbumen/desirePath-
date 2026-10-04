@@ -77,13 +77,6 @@ function LiveRun({ run }: { run: RunSession }) {
 
   return (
     <main className="run">
-      <header className="page-head">
-        <div>
-          <p className="crumb">Live run / {run.areaName}</p>
-          <h1 className="page-title">{finished ? 'Nice work.' : 'Keep moving.'}</h1>
-        </div>
-      </header>
-
       <RouteMap routes={mapRoutes} height={290} marker={run.position ?? here}>
         <span className="map-chip run__gps" style={{ left: 16, top: 16 }} title={gps.error ?? undefined}>
           <i aria-hidden="true" />

@@ -1,11 +1,11 @@
 import { ArrowUpRight, MapPin } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Logo } from '../components/Logo.tsx'
 import { NumberStepper } from '../components/NumberStepper.tsx'
+import { WheelPicker } from '../components/WheelPicker.tsx'
 import { TopoArt } from '../components/TopoArt.tsx'
 import { useAppState } from '../hooks/useAppState.ts'
-import { formatPostalCode, isKnownArea, isValidPostalCode, lookupArea } from '../utils/areas.ts'
+import { formatPostalCode, isValidPostalCode, lookupArea } from '../utils/areas.ts'
 import './PlanPage.css'
 
 const MAX_ELEVATION = 6000
@@ -13,6 +13,8 @@ const MIN_DISTANCE_KM = 1
 const MAX_DISTANCE_KM = 42.2
 const DISTANCE_PRESETS = [3, 5, 10, 21.1]
 const MIN_TIME_MINUTES = 10
+// Upper end of the hours wheel; enough for a marathon at an easy pace.
+const MAX_TIME_HOURS = 6
 // Faster than ~3 min/km is elite territory; flag it rather than generate impossible routes.
 const FASTEST_PACE_MIN_PER_KM = 3
 
@@ -53,11 +55,7 @@ export function PlanPage() {
     : null
 
   const area = lookupArea(postal)
-  const province = area.region.split(', ').pop()
-  const postalHint =
-    submitted && postalError ? postalError
-    : isKnownArea(postal) ? `Explore around ${area.name}, ${province}`
-    : "We'll look for routes close to you."
+  const showPostalError = submitted && !!postalError
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -76,22 +74,12 @@ export function PlanPage() {
 
   return (
     <main className="page plan">
-      <Logo />
-
-      <p className="eyebrow plan__eyebrow">Built for your next run</p>
-      <h1 className="plan__title">
-        New ground.
-        <br />
-        Your pace.
-      </h1>
-      <p className="plan__lede">Start close to home. Find a route that fits your elevation goals.</p>
-
       <form onSubmit={onSubmit} noValidate>
         <div className="field">
           <label className="field__label" htmlFor="postal">
             Canadian postal code
           </label>
-          <div className={`input-shell${submitted && postalError ? ' is-invalid' : ''}`}>
+          <div className={`input-shell${showPostalError ? ' is-invalid' : ''}`}>
             <MapPin className="input-shell__icon" aria-hidden="true" />
             <input
               id="postal"
@@ -100,20 +88,22 @@ export function PlanPage() {
               autoCapitalize="characters"
               spellCheck={false}
               value={postal}
-              aria-describedby="postal-hint"
-              aria-invalid={(submitted && !!postalError) || undefined}
+              aria-describedby={showPostalError ? 'postal-error' : undefined}
+              aria-invalid={showPostalError || undefined}
               onChange={(e) => setPostal(formatPostalCode(e.target.value))}
             />
             <span className="input-shell__suffix">CA</span>
           </div>
-          <p id="postal-hint" className={`field__hint${submitted && postalError ? ' is-error' : ''}`}>
-            {postalHint}
-          </p>
+          {/* Only errors appear under fields; no always-on helper text */}
+          {showPostalError && (
+            <p id="postal-error" className="field__hint is-error" role="alert">
+              {postalError}
+            </p>
+          )}
         </div>
 
         <div className="plan__section-head">
           <h2>Set your distance</h2>
-          <span>Kilometers</span>
         </div>
 
         <div className="chips" role="group" aria-label="Quick distance picks">
@@ -133,7 +123,6 @@ export function PlanPage() {
         <NumberStepper
           id="distance"
           label="Distance"
-          hint="All three routes will be about this long."
           value={distance}
           onChange={setDistance}
           step={0.5}
@@ -150,29 +139,13 @@ export function PlanPage() {
 
         <div className="plan__section-head">
           <h2>Set your time</h2>
-          <span>How long you have</span>
         </div>
 
-        <NumberStepper
-          id="hours"
-          label="Hours"
-          hint="0 if you're out for less than an hour."
-          value={hours}
-          onChange={setHours}
-          step={1}
-          unit="h"
-          invalid={submitted && !!timeError}
-        />
-        <NumberStepper
-          id="minutes"
-          label="Minutes"
-          hint="Routes won't take longer than your total time."
-          value={minutes}
-          onChange={setMinutes}
-          step={5}
-          unit="min"
-          invalid={submitted && !!timeError}
-        />
+        {/* iPhone Clock-style: hours and minutes side by side, scroll or flick to change */}
+        <div className={`time-picker${submitted && timeError ? ' is-invalid' : ''}`} role="group" aria-label="Time">
+          <WheelPicker label="Hours" unit="hours" min={0} max={MAX_TIME_HOURS} value={h} onChange={(v) => setHours(String(v))} />
+          <WheelPicker label="Minutes" unit="min" min={0} max={59} value={m} onChange={(v) => setMinutes(String(v))} />
+        </div>
 
         {submitted && timeError && (
           <p className="field__hint is-error" role="alert">
@@ -185,9 +158,9 @@ export function PlanPage() {
           <span>Meters above sea level</span>
         </div>
 
-        <NumberStepper id="min" label="Min Elevation" hint="The lowest point on your route." value={minE} onChange={setMinE} invalid={submitted && !!elevationError} />
-        <NumberStepper id="avg" label="Average Elevation" hint="Your preferred average altitude." value={avgE} onChange={setAvgE} invalid={submitted && !!elevationError} />
-        <NumberStepper id="max" label="Max Elevation" hint="The highest point you want to reach." value={maxE} onChange={setMaxE} invalid={submitted && !!elevationError} />
+        <NumberStepper id="min" label="Min Elevation" value={minE} onChange={setMinE} invalid={submitted && !!elevationError} />
+        <NumberStepper id="avg" label="Average Elevation" value={avgE} onChange={setAvgE} invalid={submitted && !!elevationError} />
+        <NumberStepper id="max" label="Max Elevation" value={maxE} onChange={setMaxE} invalid={submitted && !!elevationError} />
 
         {submitted && elevationError && (
           <p className="field__hint is-error" role="alert">
@@ -199,7 +172,6 @@ export function PlanPage() {
           <ArrowUpRight aria-hidden="true" />
           {loading ? 'Finding routes…' : 'Find My Routes'}
         </button>
-        <p className="plan__submit-note">Three routes. One great place to start.</p>
       </form>
 
       <section className="ground-card">

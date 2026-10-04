@@ -3,7 +3,8 @@ import { ChevronDown, ChevronUp } from 'lucide-react'
 interface NumberStepperProps {
   id: string
   label: string
-  hint: string
+  /** Optional helper text under the field. */
+  hint?: string
   value: string
   onChange: (value: string) => void
   step?: number
@@ -43,7 +44,7 @@ export function NumberStepper({
           inputMode={decimal ? 'decimal' : 'numeric'}
           autoComplete="off"
           value={value}
-          aria-describedby={`${id}-hint`}
+          aria-describedby={hint ? `${id}-hint` : undefined}
           aria-invalid={invalid || undefined}
           onChange={(e) => onChange(sanitize(e.target.value, decimal))}
         />
@@ -57,9 +58,11 @@ export function NumberStepper({
           </button>
         </div>
       </div>
-      <p className="field__hint" id={`${id}-hint`}>
-        {hint}
-      </p>
+      {hint && (
+        <p className="field__hint" id={`${id}-hint`}>
+          {hint}
+        </p>
+      )}
     </div>
   )
 }

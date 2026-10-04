@@ -1,4 +1,5 @@
 import { Activity, ChartNoAxesColumn, Route, type LucideIcon } from 'lucide-react'
+import type { CSSProperties } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAppState } from '../hooks/useAppState.ts'
 
@@ -20,8 +21,18 @@ export function BottomNav() {
     { to: '/history', label: 'History', icon: ChartNoAxesColumn, active: (p) => p === '/history' },
   ]
 
+  const activeIndex = tabs.findIndex((tab) => tab.active(pathname))
+
   return (
     <nav className="bottom-nav" aria-label="Main">
+      {/* One shared underline that slides to the active tab (CSS transition on --tab) */}
+      {activeIndex >= 0 && (
+        <span
+          className="bottom-nav__indicator"
+          style={{ '--tab': activeIndex, '--tabs': tabs.length } as CSSProperties}
+          aria-hidden="true"
+        />
+      )}
       {tabs.map(({ to, label, icon: Icon, active }) => {
         const isActive = active(pathname)
         return (

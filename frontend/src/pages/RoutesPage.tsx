@@ -28,8 +28,6 @@ export function RoutesPage() {
 
   if (!result || !request) return <Navigate to="/" replace />
 
-  const selected = result.routes.find((r) => r.id === selectedRouteId)
-
   const onStart = (route: GeneratedRoute) => {
     startRun(route)
     navigate('/run')
@@ -37,24 +35,16 @@ export function RoutesPage() {
 
   return (
     <main className="routes">
-      <header className="page-head">
-        <div>
-          <p className="crumb">
-            {request.postalCode} / {result.area.region}
-          </p>
-          <h1 className="page-title">Your running ground</h1>
-        </div>
-        <button type="button" className="icon-btn" aria-label="Change postal code or elevation" onClick={() => navigate('/')}>
-          <SlidersHorizontal />
-        </button>
-      </header>
-
       <LiveMap routes={mapRoutes} height={360} />
 
       <section className="routes__list">
         <div className="routes__list-head">
           <h2>{result.routes.length} routes for you</h2>
-          {selected && <span className="eyebrow">1 selected</span>}
+          {/* Back to the planner to change postal code, distance, time or elevation */}
+          <button type="button" className="text-btn" onClick={() => navigate('/')}>
+            <SlidersHorizontal aria-hidden="true" />
+            Edit search
+          </button>
         </div>
 
         {result.routes.map((route) => {

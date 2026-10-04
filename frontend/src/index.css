@@ -68,27 +68,56 @@ a {
   background: var(--bg);
 }
 
+/* Top bar: page title on the left, account controls on the right */
 .account-bar {
   display: flex;
-  min-height: 48px;
+  min-height: 56px;
   align-items: center;
-  justify-content: flex-end;
-  padding: 8px var(--gutter) 0;
-}
-
-.account-bar--signed-in {
   justify-content: space-between;
   gap: 12px;
+  padding: calc(10px + env(safe-area-inset-top)) var(--gutter) 6px;
 }
 
-.account-chip {
+.account-bar__title {
   display: flex;
   min-width: 0;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  margin: 0;
+  overflow: hidden;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
-.account-chip__avatar {
+.account-bar__mark {
+  display: grid;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--lime);
+  color: var(--lime-ink);
+}
+
+.account-bar__mark svg {
+  width: 17px;
+  height: 17px;
+}
+
+/* Small phones: drop the icon so "Desire Path" fits beside Sign in / Create account */
+@media (max-width: 380px) {
+  .account-bar__mark {
+    display: none;
+  }
+}
+
+/* Signed-in indicator: your initial, with a green status dot */
+.account-avatar {
+  position: relative;
   display: grid;
   flex: none;
   width: 34px;
@@ -99,45 +128,24 @@ a {
   color: var(--lime-ink);
   font-size: 15px;
   font-weight: 700;
+  cursor: default;
 }
 
-.account-chip__text {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  line-height: 1.25;
-}
-
-.account-chip__status {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--lime);
-}
-
-.account-chip__status i {
-  width: 6px;
-  height: 6px;
+.account-avatar i {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 11px;
+  height: 11px;
+  border: 2px solid var(--bg);
   border-radius: 50%;
-  background: currentColor;
-}
-
-.account-chip__email {
-  overflow: hidden;
-  font-size: 13px;
-  color: var(--muted);
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  background: #3ddc84;
 }
 
 .toast {
   position: fixed;
-  /* Below the account bar, so the new "Signed in" indicator stays visible */
-  top: calc(64px + env(safe-area-inset-top));
+  /* Below the header bar, so the "Signed in" indicator stays visible */
+  top: calc(68px + env(safe-area-inset-top));
   left: 50%;
   z-index: 1100;
   display: flex;
@@ -174,8 +182,9 @@ a {
 
 .account-bar__actions {
   display: flex;
+  flex: none;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .account-bar__button {
@@ -184,7 +193,7 @@ a {
   align-items: center;
   justify-content: center;
   gap: 7px;
-  padding: 0 12px;
+  padding: 0 11px;
   border: 1px solid var(--border);
   border-radius: 999px;
   background: var(--surface);
@@ -217,8 +226,9 @@ a {
   height: 15px;
 }
 
+/* The header bar above handles the safe area, so pages only need a little breathing room */
 .page {
-  padding: calc(28px + env(safe-area-inset-top)) var(--gutter) 40px;
+  padding: 16px var(--gutter) 40px;
 }
 
 .page-head {
@@ -610,6 +620,7 @@ a {
   font-size: 14px;
   font-weight: 500;
   color: var(--muted);
+  transition: color 0.25s ease;
 }
 
 .bottom-nav__tab.is-active {
@@ -617,19 +628,37 @@ a {
   color: var(--lime);
 }
 
-.bottom-nav__tab.is-active::after {
+/* Sliding underline: one column wide, moved along by --tab; the visible bar is centred inside it */
+.bottom-nav__indicator {
+  position: absolute;
+  bottom: calc(8px + env(safe-area-inset-bottom));
+  left: 0;
+  width: calc(100% / var(--tabs));
+  height: 3px;
+  transform: translateX(calc(var(--tab) * 100%));
+  transition: transform 0.35s cubic-bezier(0.22, 0.9, 0.3, 1);
+  pointer-events: none;
+}
+
+.bottom-nav__indicator::before {
   content: '';
   position: absolute;
-  bottom: 8px;
+  left: 50%;
   width: 22px;
-  height: 3px;
+  height: 100%;
   border-radius: 2px;
   background: var(--lime);
+  transform: translateX(-50%);
 }
 
 .bottom-nav__icon {
   position: relative;
   display: grid;
+  transition: transform 0.25s ease;
+}
+
+.bottom-nav__tab.is-active .bottom-nav__icon {
+  transform: translateY(-2px);
 }
 
 .bottom-nav__icon svg {

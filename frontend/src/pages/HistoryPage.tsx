@@ -60,9 +60,6 @@ export function HistoryPage() {
 
   return (
     <main className="page history">
-      <p className="crumb">Your running record</p>
-      <h1 className="page-title">Every run counts.</h1>
-
       <section className="big-picture" aria-label="Saved run totals">
         <header>
           <p className="eyebrow">The big picture</p>

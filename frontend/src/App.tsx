@@ -1,4 +1,4 @@
-import { CircleCheck, LogOut } from 'lucide-react'
+import { CircleCheck, LogOut, Route as RouteIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { BottomNav } from './components/BottomNav.tsx'
@@ -14,10 +14,23 @@ const AUTH_SESSION_KEY = 'desirepath-authenticated'
 const AUTH_EMAIL_KEY = 'desirepath-user-email'
 const WELCOME_TOAST_MS = 3500
 
+/** Title shown top-left in the header bar. Plan + Routes both live under the Plan tab. */
+function pageTitle(pathname: string): string {
+  if (pathname.startsWith('/run')) return 'Run'
+  if (pathname.startsWith('/history')) return 'History'
+  return 'Desire Path'
+}
+
 function App() {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const isAuthPage = pathname === '/login' || pathname === '/signup'
+  const title = pageTitle(pathname)
+
+  // Each page should open at the top, not wherever the previous page was scrolled to.
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
   const [isAuthenticated, setIsAuthenticated] = useState(
     () => sessionStorage.getItem(AUTH_SESSION_KEY) === 'true',
   )
@@ -50,26 +63,33 @@ function App() {
   return (
     <AppStateProvider key={accountEmail ?? 'anonymous'} userEmail={accountEmail}>
       <div className="app">
-        <header className={`account-bar${isAuthenticated ? ' account-bar--signed-in' : ''}`}>
+        <header className="account-bar">
+          {/* The page's own heading now lives here, so pages start straight with their content. */}
+          <h1 className="account-bar__title">
+            {title === 'Desire Path' && (
+              <span className="account-bar__mark" aria-hidden="true">
+                <RouteIcon strokeWidth={2.4} />
+              </span>
+            )}
+            {title}
+          </h1>
+
           {isAuthenticated ? (
-            <>
-              <div className="account-chip" title={accountEmail ?? undefined}>
-                <span className="account-chip__avatar" aria-hidden="true">
-                  {(accountEmail?.[0] ?? '?').toUpperCase()}
-                </span>
-                <span className="account-chip__text">
-                  <span className="account-chip__status">
-                    <i aria-hidden="true" />
-                    Signed in
-                  </span>
-                  <span className="account-chip__email">{accountEmail}</span>
-                </span>
-              </div>
+            <div className="account-bar__actions">
+              <span
+                className="account-avatar"
+                title={`Signed in as ${accountEmail ?? ''}`}
+                aria-label={`Signed in as ${accountEmail ?? ''}`}
+                role="img"
+              >
+                {(accountEmail?.[0] ?? '?').toUpperCase()}
+                <i aria-hidden="true" />
+              </span>
               <button type="button" className="account-bar__button" onClick={onLogout}>
                 <LogOut aria-hidden="true" />
                 Log out
               </button>
-            </>
+            </div>
           ) : isAuthPage ? (
             <Link className="account-bar__button" to={pathname === '/login' ? '/signup' : '/login'}>
               {pathname === '/login' ? 'Create account' : 'Sign in'}
