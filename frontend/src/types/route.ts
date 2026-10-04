@@ -65,6 +65,12 @@ export interface RouteResponse {
   routes: GeneratedRoute[]
 }
 
+/** One moment of a run: elapsed seconds (paused time excluded) and distance covered by then. */
+export interface PaceSample {
+  t: number
+  km: number
+}
+
 export interface RunRecord {
   id: string
   routeId: string
@@ -74,6 +80,8 @@ export interface RunRecord {
   distanceKm: number
   elevationGain: number
   points: LatLng[]
+  /** About one per 100 m; the pace graph is built from these. Missing on runs saved before pace tracking. */
+  paceSamples?: PaceSample[]
   plannedRoute?: GeneratedRoute
   /** Set when the run comes from the backend; signed-out users keep favorites in browser storage instead. */
   isFavorite?: boolean

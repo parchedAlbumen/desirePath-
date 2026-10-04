@@ -1,5 +1,5 @@
 import { createContext } from 'react'
-import type { GeneratedRoute, LatLng, RouteRequest, RouteResponse, RunRecord } from '../types/route.ts'
+import type { GeneratedRoute, LatLng, PaceSample, RouteRequest, RouteResponse, RunRecord } from '../types/route.ts'
 
 export type RunStatus = 'running' | 'paused' | 'finished'
 
@@ -16,6 +16,8 @@ export interface RunSession {
   mode: RunMode
   /** Last trusted GPS position (GPS mode only). Distance is measured from here. */
   position: LatLng | null
+  /** Time/distance snapshots for the pace graph, starting with {t: 0, km: 0}. */
+  samples: PaceSample[]
 }
 
 export interface AppState {

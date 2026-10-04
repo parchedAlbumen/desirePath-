@@ -15,6 +15,7 @@ RUN = {
     "durationSec": 1538, "distanceKm": 4.2, "elevationGain": 65,
     "points": [{"lat": 49.28, "lng": -123.12}, {"lat": 49.29, "lng": -123.13}],
     "plannedRoute": {"id": "route-1", "name": "Campus Loop"},
+    "paceSamples": [{"t": 0, "km": 0}, {"t": 36.5, "km": 0.1}, {"t": 1538, "km": 4.2}],
 }
 
 
@@ -42,6 +43,7 @@ def test_runs_crud(emails):
         run = created.json()
         assert run["routeName"] == "Campus Loop" and run["isFavorite"] is False
         assert run["points"][1]["lng"] == -123.13 and run["plannedRoute"]["id"] == "route-1"
+        assert run["paceSamples"] == RUN["paceSamples"]
 
         assert client.get(f"/api/runs/{run['id']}", headers=h).json()["durationSec"] == 1538
         assert [r["id"] for r in client.get("/api/runs", headers=h).json()] == [run["id"]]
