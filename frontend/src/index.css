@@ -128,20 +128,100 @@ a {
   }
 }
 
-/* Signed-in indicator: your initial, with a green status dot */
+/* Account menu: an account icon (with a green "signed in" dot) that opens a small dropdown */
+.account-menu {
+  position: relative;
+  flex: none;
+}
+
 .account-avatar {
   position: relative;
   display: grid;
-  flex: none;
-  width: 34px;
-  height: 34px;
+  width: 38px;
+  height: 38px;
   place-items: center;
+  padding: 0;
+  border: 1px solid var(--border);
   border-radius: 50%;
-  background: var(--primary);
-  color: var(--primary-ink);
-  font-size: 15px;
-  font-weight: 700;
-  cursor: default;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.account-avatar:hover,
+.account-avatar[aria-expanded='true'] {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.account-avatar svg {
+  width: 22px;
+  height: 22px;
+}
+
+.account-menu__panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 1200; /* above Leaflet map controls */
+  display: flex;
+  min-width: 220px;
+  max-width: calc(100vw - 2 * var(--gutter));
+  flex-direction: column;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  animation: menu-in 0.15s ease-out;
+}
+
+.account-menu__who {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 10px 12px 12px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.account-menu__who strong {
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.account-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin-top: 4px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.account-menu__item:hover {
+  background: var(--surface-2);
+}
+
+.account-menu__item svg {
+  width: 17px;
+  height: 17px;
+  color: var(--muted);
 }
 
 .account-avatar i {
@@ -697,5 +777,12 @@ a {
   * {
     animation: none !important;
     transition: none !important;
+  }
+}
+
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
   }
 }

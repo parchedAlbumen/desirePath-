@@ -15,6 +15,7 @@ export function AuthPage({ onAuthenticated }: { onAuthenticated: (email: string,
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [showResetInfo, setShowResetInfo] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [feedback, setFeedback] = useState<{ kind: 'error' | 'success'; message: string } | null>(null)
 
@@ -98,9 +99,22 @@ export function AuthPage({ onAuthenticated }: { onAuthenticated: (email: string,
           </div>
 
           <div className="field">
-            <label className="field__label" htmlFor="password">
-              Password
-            </label>
+            <div className="auth__label-row">
+              <label className="field__label" htmlFor="password">
+                Password
+              </label>
+              {!isSignup && (
+                <button
+                  type="button"
+                  className="auth__forgot"
+                  aria-expanded={showResetInfo}
+                  aria-controls="reset-info"
+                  onClick={() => setShowResetInfo((v) => !v)}
+                >
+                  Forgot password?
+                </button>
+              )}
+            </div>
             <div className="auth__input">
               <LockKeyhole aria-hidden="true" />
               <input
@@ -121,6 +135,13 @@ export function AuthPage({ onAuthenticated }: { onAuthenticated: (email: string,
             {isSignup && (
               <p className="auth__hint" id="password-hint">
                 At least {MIN_PASSWORD_LENGTH} characters.
+              </p>
+            )}
+            {/* Placeholder until the backend can email reset links */}
+            {!isSignup && showResetInfo && (
+              <p className="auth__reset-info" id="reset-info" role="status">
+                Password resets are coming soon. For now, if you can’t sign in, create a new account with a
+                different email.
               </p>
             )}
           </div>

@@ -177,3 +177,35 @@
     display: none;
   }
 }
+
+/* Password label with "Forgot password?" on the right (sign-in only) */
+.auth__label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.auth__forgot {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--primary);
+  cursor: pointer;
+}
+
+.auth__forgot:hover {
+  text-decoration: underline;
+}
+
+.auth__reset-info {
+  margin: 10px 0 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--muted);
+}
