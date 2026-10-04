@@ -15,7 +15,8 @@ const ENDPOINTS: Record<AuthMode, string> = {
   signup: '/api/auth/register',
 }
 
-export async function submitCredentials(mode: AuthMode, credentials: Credentials): Promise<void> {
+/** Signs up or logs in, stores the JWT, and resolves with the account's email as the backend saved it. */
+export async function submitCredentials(mode: AuthMode, credentials: Credentials): Promise<string> {
   const what = mode === 'signup' ? 'Sign up' : 'Login'
   let response: Response
   try {
@@ -35,4 +36,5 @@ export async function submitCredentials(mode: AuthMode, credentials: Credentials
   const body = await response.json()
   // Keep the JWT so later API calls can send "Authorization: Bearer <token>"
   sessionStorage.setItem(AUTH_TOKEN_KEY, body.access_token)
+  return body.user?.email ?? credentials.email
 }

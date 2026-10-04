@@ -5,7 +5,7 @@ import { Logo } from '../components/Logo.tsx'
 import { submitCredentials, type AuthMode } from '../services/auth.ts'
 import './AuthPage.css'
 
-export function AuthPage({ onAuthenticated }: { onAuthenticated: (email: string) => void }) {
+export function AuthPage({ onAuthenticated }: { onAuthenticated: (email: string, message: string) => void }) {
   const { pathname } = useLocation()
   const mode: AuthMode = pathname === '/signup' ? 'signup' : 'login'
   const isSignup = mode === 'signup'
@@ -20,18 +20,17 @@ export function AuthPage({ onAuthenticated }: { onAuthenticated: (email: string)
     setFeedback(null)
 
     try {
-      await submitCredentials(mode, { email, password })
-      onAuthenticated(email)
-      setFeedback({
-        kind: 'success',
-        message: isSignup ? 'Your account has been created.' : 'You have successfully signed in.',
-      })
+      const accountEmail = await submitCredentials(mode, { email, password })
+      // App takes it from here: it sends you home and shows this as a welcome toast.
+      onAuthenticated(
+        accountEmail,
+        isSignup ? 'Account created. Welcome to desirePath!' : 'Welcome back! You’re signed in.',
+      )
     } catch (error) {
       setFeedback({
         kind: 'error',
         message: error instanceof Error ? error.message : 'Something went wrong. Please try again.',
       })
-    } finally {
       setIsSubmitting(false)
     }
   }

@@ -76,6 +76,102 @@ a {
   padding: 8px var(--gutter) 0;
 }
 
+.account-bar--signed-in {
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.account-chip {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+.account-chip__avatar {
+  display: grid;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--lime);
+  color: var(--lime-ink);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.account-chip__text {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.account-chip__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--lime);
+}
+
+.account-chip__status i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.account-chip__email {
+  overflow: hidden;
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.toast {
+  position: fixed;
+  /* Below the account bar, so the new "Signed in" indicator stays visible */
+  top: calc(64px + env(safe-area-inset-top));
+  left: 50%;
+  z-index: 1100;
+  display: flex;
+  width: max-content;
+  max-width: calc(100% - 2 * var(--gutter));
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 12px 18px;
+  border: 1px solid var(--lime);
+  border-radius: 999px;
+  background: #1a1e17;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  transform: translateX(-50%);
+  animation: toast-in 0.25s ease-out;
+}
+
+.toast svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--lime);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -8px);
+  }
+}
+
 .account-bar__actions {
   display: flex;
   align-items: center;
