@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { ElevationProfile } from '../components/ElevationChart.tsx'
 import { RouteMap } from '../components/RouteMap.tsx'
 import { useAppState } from '../hooks/useAppState.ts'
+import { MIN_SAVE_KM } from '../config.ts'
 import type { RunSession } from '../state/context.ts'
 import { LIME } from '../utils/difficulty.ts'
 import { formatDuration, formatPace } from '../utils/format.ts'
@@ -44,6 +45,7 @@ function LiveRun({ run }: { run: RunSession }) {
   const here = sampleRoute(route.points, progress)
   const remainingKm = Math.max(0, route.distanceKm - run.distanceKm)
   const finished = run.status === 'finished'
+  const tooShort = run.distanceKm <= MIN_SAVE_KM
   const elapsedSec = run.elapsedMs / 1000
 
   const mapRoutes = useMemo(() => [{ id: route.id, points: route.points, color: LIME, selected: true }], [route])
@@ -172,27 +174,37 @@ function LiveRun({ run }: { run: RunSession }) {
             aria-labelledby="end-run-title"
             aria-describedby="end-run-description"
           >
-            <h2 id="end-run-title">Save this run?</h2>
+            <h2 id="end-run-title">{tooShort ? 'Run too short' : 'Save this run?'}</h2>
             <p id="end-run-description">
-              You ended your run early. Save the distance and route to your history?
+              {tooShort
+                ? `Too little distance covered (${MIN_SAVE_KM * 1000} m or less), so this run won't be saved.`
+                : 'You ended your run early. Save the distance and route to your history?'}
             </p>
             <div className="run__dialog-actions">
-              <button type="button" className="btn btn--primary" onClick={() => finishEarly(true)}>
-                Save run
-              </button>
-              <button type="button" className="btn btn--secondary" onClick={() => finishEarly(false)}>
-                Discard
-              </button>
-              <button
-                type="button"
-                className="text-btn"
-                onClick={() => {
-                  setConfirmEnd(false)
-                  if (resumeAfterPrompt) resumeRun()
-                }}
-              >
-                {resumeAfterPrompt ? 'Keep running' : 'Keep paused'}
-              </button>
+              {tooShort ? (
+                <button type="button" className="btn btn--primary" onClick={() => finishEarly(false)}>
+                  Close
+                </button>
+              ) : (
+                <>
+                  <button type="button" className="btn btn--primary" onClick={() => finishEarly(true)}>
+                    Save run
+                  </button>
+                  <button type="button" className="btn btn--secondary" onClick={() => finishEarly(false)}>
+                    Discard
+                  </button>
+                  <button
+                    type="button"
+                    className="text-btn"
+                    onClick={() => {
+                      setConfirmEnd(false)
+                      if (resumeAfterPrompt) resumeRun()
+                    }}
+                  >
+                    {resumeAfterPrompt ? 'Keep running' : 'Keep paused'}
+                  </button>
+                </>
+              )}
             </div>
           </section>
         </div>

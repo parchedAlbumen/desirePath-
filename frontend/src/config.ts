@@ -7,3 +7,6 @@ export const DEMO_MODE = new URLSearchParams(window.location.search).has('demo')
 
 // Demo helper: add &speed=20 (with ?demo) to fast-forward simulated runs.
 export const SIM_SPEED = Math.max(1, Number(new URLSearchParams(window.location.search).get('speed')) || 1)
+
+// A run must cover more than this (km) to be saved; shorter ones are dropped.
+export const MIN_SAVE_KM = 0.05

@@ -5,7 +5,7 @@ import { loadFavoriteRuns, loadRuns, mostRecentRuns, saveFavoriteRuns, saveRuns 
 import { createRun, fetchRuns, hasAuthToken, isServerRunId, setRunFavorite } from '../services/runs.ts'
 import type { GeneratedRoute, RouteRequest, RouteResponse, RunRecord } from '../types/route.ts'
 import { AppStateContext, type AppState, type RunSession } from './context.ts'
-import { DEMO_MODE, SIM_SPEED } from '../config.ts'
+import { DEMO_MODE, MIN_SAVE_KM, SIM_SPEED } from '../config.ts'
 import { useGeolocation, type GpsFix } from '../hooks/useGeolocation.ts'
 import { gradeAt, haversineKm, sampleRoute } from '../utils/geo.ts'
 
@@ -150,7 +150,7 @@ export function AppStateProvider({ children, userEmail }: { children: ReactNode;
   const endRun = useCallback((save = true) => {
     stopSpeaking()
     if (!run) return
-    if (save && run.distanceKm >= 0.05) {
+    if (save && run.distanceKm > MIN_SAVE_KM) {
       const { route } = run
       const fraction = run.distanceKm / route.distanceKm
       const done = route.points.slice(0, Math.max(1, Math.floor(fraction * (route.points.length - 1)) + 1))
