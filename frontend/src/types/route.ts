@@ -70,4 +70,5 @@ export interface RunRecord {
   distanceKm: number
   elevationGain: number
   points: LatLng[]
+  plannedRoute?: GeneratedRoute
 }
