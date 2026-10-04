@@ -26,8 +26,9 @@ def register(app: FastAPI) -> None:
 
     @app.exception_handler(RateLimited)
     async def _rate_limited(request: Request, exc: RateLimited):
-        who = "You're" if exc.scope == "ip" else "Everyone's"
-        return _json(429, f"{who} generating routes too fast. Try again in {exc.retry_after}s.",
+        who = "Everyone's" if exc.scope == "global" else "You're"
+        hint = " Log in for a higher limit." if exc.scope == "ip" else ""
+        return _json(429, f"{who} generating routes too fast. Try again in {exc.retry_after}s.{hint}",
                      {"Retry-After": str(exc.retry_after)})
 
     @app.exception_handler(ors.NotFound)
