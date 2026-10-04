@@ -71,4 +71,6 @@ export interface RunRecord {
   elevationGain: number
   points: LatLng[]
   plannedRoute?: GeneratedRoute
+  /** Set when the run comes from the backend; signed-out users keep favorites in browser storage instead. */
+  isFavorite?: boolean
 }

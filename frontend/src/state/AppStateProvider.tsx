@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { generateRoutes } from '../services/api.ts'
 import { stopSpeaking } from '../services/coach.ts'
-import { loadRuns, mostRecentRuns, saveRuns } from '../services/history.ts'
+import { loadFavoriteRuns, loadRuns, mostRecentRuns, saveFavoriteRuns, saveRuns } from '../services/history.ts'
+import { createRun, fetchRuns, hasAuthToken, isServerRunId, setRunFavorite } from '../services/runs.ts'
 import type { GeneratedRoute, RouteRequest, RouteResponse, RunRecord } from '../types/route.ts'
 import { AppStateContext, type AppState, type RunSession } from './context.ts'
 import { DEMO_MODE, SIM_SPEED } from '../config.ts'
@@ -29,6 +30,8 @@ function advance(run: RunSession, dtMs: number): RunSession {
   }
 }
 
+const describe = (error: unknown) => (error instanceof Error ? error.message : '')
+
 const makeId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
 
 export function AppStateProvider({ children, userEmail }: { children: ReactNode; userEmail: string | null }) {
@@ -37,10 +40,41 @@ export function AppStateProvider({ children, userEmail }: { children: ReactNode;
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [run, setRun] = useState<RunSession | null>(null)
-  const [history, setHistory] = useState<RunRecord[]>(() => loadRuns(userEmail))
+  // Signed in (has a login token): runs and favorites live on the backend, and browser storage is only
+  // a stand-in until they load. Signed out: everything stays in browser storage, as before.
+  const [useBackend] = useState(hasAuthToken)
+  const [runs, setRuns] = useState<RunRecord[]>(() => loadRuns(userEmail))
+  const [localFavorites, setLocalFavorites] = useState<RunRecord[]>(() =>
+    useBackend ? [] : loadFavoriteRuns(userEmail, loadRuns(userEmail)),
+  )
+  const [syncError, setSyncError] = useState<string | null>(null)
   const [coachOn, setCoachOn] = useState(true)
 
+  const history = useMemo(() => mostRecentRuns(runs), [runs])
+  const favorites = useMemo(
+    () => (useBackend ? runs.filter((r) => r.isFavorite) : localFavorites),
+    [useBackend, runs, localFavorites],
+  )
+
   useEffect(() => saveRuns(userEmail, history), [history, userEmail])
+
+  useEffect(() => {
+    if (!useBackend) return
+    let cancelled = false
+    fetchRuns()
+      .then((serverRuns) => {
+        if (cancelled) return
+        setRuns(serverRuns)
+        setSyncError(null)
+      })
+      .catch((error) => {
+        console.warn('[history] Could not load runs from the backend:', error)
+        if (!cancelled) setSyncError(`Couldn't load your runs from the server. ${describe(error)}`)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [useBackend])
 
   // Every GPS reading comes through here; only trustworthy movement adds distance.
   const addGpsFix = useCallback((fix: GpsFix) => {
@@ -131,10 +165,48 @@ export function AppStateProvider({ children, userEmail }: { children: ReactNode;
         points: [...done, sampleRoute(route.points, fraction)].map(({ lat, lng }) => ({ lat, lng })),
         plannedRoute: route,
       }
-      setHistory((h) => mostRecentRuns([record, ...h]))
+      setRuns((rs) => [record, ...rs])
+      if (useBackend) {
+        // Show it straight away, then swap in the backend's copy (which has the real id).
+        createRun(record)
+          .then((saved) => {
+            setRuns((rs) => rs.map((r) => (r.id === record.id ? saved : r)))
+            setSyncError(null)
+          })
+          .catch((error) => {
+            console.warn('[history] Could not save the run to the backend:', error)
+            setSyncError(`Your run wasn't saved to the server. ${describe(error)}`)
+          })
+      }
     }
     setRun(null)
-  }, [run])
+  }, [run, useBackend])
+
+  const toggleFavorite = useCallback(
+    async (target: RunRecord) => {
+      const makeFavorite = !favorites.some((f) => f.id === target.id)
+      if (!useBackend) {
+        const next = makeFavorite ? [...localFavorites, target] : localFavorites.filter((f) => f.id !== target.id)
+        saveFavoriteRuns(userEmail, next)
+        setLocalFavorites(next)
+        return makeFavorite
+      }
+      const replace = (id: string, run: RunRecord) => setRuns((rs) => rs.map((r) => (r.id === id ? run : r)))
+      replace(target.id, { ...target, isFavorite: makeFavorite }) // optimistic
+      try {
+        // A run that never reached the backend (it was down when the run ended) is saved now.
+        const saved = isServerRunId(target.id)
+          ? await setRunFavorite(target.id, makeFavorite)
+          : await createRun({ ...target, isFavorite: makeFavorite })
+        replace(target.id, saved)
+        return makeFavorite
+      } catch (error) {
+        replace(target.id, target)
+        throw error
+      }
+    },
+    [favorites, localFavorites, useBackend, userEmail],
+  )
 
   const value = useMemo<AppState>(
     () => ({
@@ -151,6 +223,9 @@ export function AppStateProvider({ children, userEmail }: { children: ReactNode;
       endRun,
       gps: { accuracy: gpsWatch.fix?.accuracy ?? null, error: gpsWatch.error },
       history,
+      favorites,
+      syncError,
+      toggleFavorite,
       coachOn,
       setCoachOn,
     }),
@@ -168,6 +243,9 @@ export function AppStateProvider({ children, userEmail }: { children: ReactNode;
       gpsWatch.fix,
       gpsWatch.error,
       history,
+      favorites,
+      syncError,
+      toggleFavorite,
       coachOn,
     ],
   )

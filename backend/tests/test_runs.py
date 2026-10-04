@@ -86,7 +86,8 @@ def test_limit_is_applied_and_clamped(emails):
     with TestClient(app) as client:
         h = _login(client, emails)
         for i in range(3):
-            client.post("/api/runs", json=_run(startedAt=f"2026-10-0{i + 1}T07:00:00Z"), headers=h)
+            # favorites, so the 2-recent-runs cap doesn't delete any of them
+            client.post("/api/runs", json=_run(startedAt=f"2026-10-0{i + 1}T07:00:00Z", isFavorite=True), headers=h)
         assert len(client.get("/api/runs?limit=2", headers=h).json()) == 2
         assert len(client.get("/api/runs?limit=0", headers=h).json()) == 1  # clamped up to 1
         assert len(client.get("/api/runs?limit=9999", headers=h).json()) == 3  # clamped down to 200
@@ -178,3 +179,48 @@ def test_deleting_a_user_deletes_their_runs(emails):
         assert client.delete("/api/auth/me", headers=h).status_code == 204
         with get_connection() as conn:
             assert conn.execute("SELECT count(*) FROM runs WHERE id = %s", (rid,)).fetchone()[0] == 0
+
+
+def _ids(client, h):
+    return [r["id"] for r in client.get("/api/runs", headers=h).json()]
+
+
+def test_only_the_two_newest_runs_are_kept(emails):
+    with TestClient(app) as client:
+        h = _login(client, emails)
+        first = client.post("/api/runs", json=_run(startedAt="2026-10-01T07:00:00Z"), headers=h).json()
+        second = client.post("/api/runs", json=_run(startedAt="2026-10-02T07:00:00Z"), headers=h).json()
+        assert set(_ids(client, h)) == {first["id"], second["id"]}
+
+        third = client.post("/api/runs", json=_run(startedAt="2026-10-03T07:00:00Z"), headers=h).json()
+        assert _ids(client, h) == [third["id"], second["id"]]  # the oldest was deleted
+        assert client.get(f"/api/runs/{first['id']}", headers=h).status_code == 404
+
+
+def test_favorites_are_not_counted_or_deleted_by_the_cap(emails):
+    with TestClient(app) as client:
+        h = _login(client, emails)
+        starred = client.post("/api/runs", json=_run(startedAt="2026-09-01T07:00:00Z", isFavorite=True), headers=h).json()
+        for day in (1, 2, 3):
+            client.post("/api/runs", json=_run(startedAt=f"2026-10-0{day}T07:00:00Z"), headers=h)
+        ids = _ids(client, h)
+        assert len(ids) == 3 and starred["id"] in ids  # old favorite + the 2 newest others
+
+
+def test_unstarring_an_old_run_deletes_it_when_over_the_cap(emails):
+    with TestClient(app) as client:
+        h = _login(client, emails)
+        old = client.post("/api/runs", json=_run(startedAt="2026-09-01T07:00:00Z", isFavorite=True), headers=h).json()
+        a = client.post("/api/runs", json=_run(startedAt="2026-10-01T07:00:00Z"), headers=h).json()
+        b = client.post("/api/runs", json=_run(startedAt="2026-10-02T07:00:00Z"), headers=h).json()
+        assert client.patch(f"/api/runs/{old['id']}", json={"isFavorite": False}, headers=h).status_code == 200
+        assert set(_ids(client, h)) == {a["id"], b["id"]}
+
+
+def test_the_cap_is_per_user(emails):
+    with TestClient(app) as client:
+        mine, theirs = _login(client, emails), _login(client, emails)
+        client.post("/api/runs", json=_run(startedAt="2026-10-01T07:00:00Z"), headers=theirs)
+        for day in (1, 2, 3):
+            client.post("/api/runs", json=_run(startedAt=f"2026-10-0{day}T07:00:00Z"), headers=mine)
+        assert len(_ids(client, theirs)) == 1 and len(_ids(client, mine)) == 2

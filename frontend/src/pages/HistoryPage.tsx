@@ -3,17 +3,14 @@ import { useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { RouteMap } from '../components/RouteMap.tsx'
 import { useAppState } from '../hooks/useAppState.ts'
-import { loadFavoriteRuns, saveFavoriteRuns } from '../services/history.ts'
 import type { GeneratedRoute, LatLng, RunRecord } from '../types/route.ts'
 import { LIME } from '../utils/difficulty.ts'
 import { formatDuration, formatKm, formatRunDate } from '../utils/format.ts'
 import './HistoryPage.css'
 
 export function HistoryPage() {
-  const { history, startRun } = useAppState()
+  const { history, favorites: savedFavorites, syncError, toggleFavorite: setFavorite, startRun } = useAppState()
   const navigate = useNavigate()
-  const accountEmail = sessionStorage.getItem('desirepath-user-email')
-  const [savedFavorites, setSavedFavorites] = useState(() => loadFavoriteRuns(accountEmail, history))
   const [searchParams, setSearchParams] = useSearchParams()
   const [newestFirst, setNewestFirst] = useState(true)
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null)
@@ -35,15 +32,10 @@ export function HistoryPage() {
   const totalKm = history.reduce((sum, run) => sum + run.distanceKm, 0)
   const totalGain = history.reduce((sum, run) => sum + run.elevationGain, 0)
 
-  const toggleFavorite = (run: RunRecord) => {
-    const isFavorite = savedFavorites.some((favorite) => favorite.id === run.id)
-    const nextFavorites = isFavorite
-      ? savedFavorites.filter((favorite) => favorite.id !== run.id)
-      : [...savedFavorites, run]
+  const toggleFavorite = async (run: RunRecord) => {
     try {
-      saveFavoriteRuns(accountEmail, nextFavorites)
-      setSavedFavorites(nextFavorites)
-      setMessage(isFavorite ? `${run.routeName} removed from favorites.` : `${run.routeName} added to favorites.`)
+      const added = await setFavorite(run)
+      setMessage(added ? `${run.routeName} added to favorites.` : `${run.routeName} removed from favorites.`)
     } catch (error) {
       setMessage(error instanceof Error ? `Could not save favorite: ${error.message}` : 'Could not save favorite.')
     }
@@ -119,6 +111,7 @@ export function HistoryPage() {
         )}
       </div>
 
+      {syncError && <p className="history__message" role="alert">{syncError}</p>}
       {invalidShare && <p className="history__message" role="alert">This shared route link is invalid or incomplete.</p>}
       {sharedRun ? (
         <section className="history__shared card" aria-label="Shared route">

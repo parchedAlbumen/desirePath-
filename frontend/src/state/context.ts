@@ -34,7 +34,14 @@ export interface AppState {
   /** GPS status for the live run screen. */
   gps: { accuracy: number | null; error: string | null }
 
+  /** The most recent runs (what the history list shows). */
   history: RunRecord[]
+  /** Starred runs. Signed in: stored on the backend. Signed out: browser storage. */
+  favorites: RunRecord[]
+  /** Set when saving or loading runs on the backend failed; null once something succeeds. */
+  syncError: string | null
+  /** Stars or unstars a run. Resolves with the new state; rejects if it couldn't be saved. */
+  toggleFavorite: (run: RunRecord) => Promise<boolean>
   coachOn: boolean
   setCoachOn: (on: boolean) => void
 }
