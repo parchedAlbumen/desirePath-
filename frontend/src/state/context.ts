@@ -1,7 +1,10 @@
 import { createContext } from 'react'
-import type { GeneratedRoute, RouteRequest, RouteResponse, RunRecord } from '../types/route.ts'
+import type { GeneratedRoute, LatLng, RouteRequest, RouteResponse, RunRecord } from '../types/route.ts'
 
 export type RunStatus = 'running' | 'paused' | 'finished'
+
+/** gps: distance from real location. demo: simulated runner (open the app with ?demo). */
+export type RunMode = 'gps' | 'demo'
 
 export interface RunSession {
   route: GeneratedRoute
@@ -10,6 +13,9 @@ export interface RunSession {
   startedAt: string
   elapsedMs: number
   distanceKm: number
+  mode: RunMode
+  /** Last trusted GPS position (GPS mode only). Distance is measured from here. */
+  position: LatLng | null
 }
 
 export interface AppState {
@@ -25,6 +31,8 @@ export interface AppState {
   pauseRun: () => void
   resumeRun: () => void
   endRun: () => void
+  /** GPS status for the live run screen. */
+  gps: { accuracy: number | null; error: string | null }
 
   history: RunRecord[]
   coachOn: boolean

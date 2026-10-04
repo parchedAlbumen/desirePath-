@@ -35,7 +35,7 @@ function NoRun() {
 }
 
 function LiveRun({ run }: { run: RunSession }) {
-  const { pauseRun, resumeRun, endRun, coachOn, setCoachOn } = useAppState()
+  const { pauseRun, resumeRun, endRun, coachOn, setCoachOn, gps } = useAppState()
   const navigate = useNavigate()
   const { route } = run
 
@@ -68,6 +68,12 @@ function LiveRun({ run }: { run: RunSession }) {
   }
 
   const statusLabel = finished ? 'Finished' : run.status === 'paused' ? 'Paused' : 'Running'
+  const gpsLabel =
+    run.mode === 'demo' ? 'Demo mode'
+    : gps.error ? 'GPS unavailable'
+    : gps.accuracy === null ? 'Finding GPS…'
+    : gps.accuracy <= 30 ? `GPS ±${Math.round(gps.accuracy)} m`
+    : `Weak GPS ±${Math.round(gps.accuracy)} m`
 
   return (
     <main className="run">
@@ -78,10 +84,10 @@ function LiveRun({ run }: { run: RunSession }) {
         </div>
       </header>
 
-      <RouteMap routes={mapRoutes} height={290} marker={here}>
-        <span className="map-chip run__gps" style={{ left: 16, top: 16 }}>
+      <RouteMap routes={mapRoutes} height={290} marker={run.position ?? here}>
+        <span className="map-chip run__gps" style={{ left: 16, top: 16 }} title={gps.error ?? undefined}>
           <i aria-hidden="true" />
-          Demo GPS
+          {gpsLabel}
         </span>
         <span className="map-label" style={{ right: 22, top: 22, textAlign: 'right' }}>
           {run.areaName}
