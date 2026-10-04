@@ -1,4 +1,4 @@
-import { Activity, ChartNoAxesColumn, Route, type LucideIcon } from 'lucide-react'
+import { Activity, ChartNoAxesColumn, History, Route, type LucideIcon } from 'lucide-react'
 import type { CSSProperties } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAppState } from '../hooks/useAppState.ts'
@@ -18,7 +18,8 @@ export function BottomNav() {
     // Plan returns to the route results if we already have some; the form is one tap away from there.
     { to: result ? '/routes' : '/', label: 'Plan', icon: Route, active: (p) => p === '/' || p === '/routes' },
     { to: '/run', label: 'Run', icon: Activity, active: (p) => p === '/run' },
-    { to: '/history', label: 'History', icon: ChartNoAxesColumn, active: (p) => p === '/history' },
+    { to: '/history', label: 'History', icon: History, active: (p) => p === '/history' },
+    { to: '/stats', label: 'Stats', icon: ChartNoAxesColumn, active: (p) => p === '/stats' },
   ]
 
   const activeIndex = tabs.findIndex((tab) => tab.active(pathname))

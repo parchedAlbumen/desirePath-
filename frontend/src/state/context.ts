@@ -36,6 +36,8 @@ export interface AppState {
 
   /** The most recent runs (what the history list shows). */
   history: RunRecord[]
+  /** Every saved run (signed in: all from the backend; signed out: this tab's runs), for the Stats page. */
+  allRuns: RunRecord[]
   /** True when signed in. Signed-out runs last only for this tab and can't be starred. */
   signedIn: boolean
   /** Starred runs, stored on the backend (always empty when signed out). */
