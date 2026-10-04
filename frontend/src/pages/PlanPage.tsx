@@ -28,6 +28,7 @@ export function PlanPage() {
   const [hours, setHours] = useState(String(request?.targetTime.hours ?? 0))
   const [minutes, setMinutes] = useState(String(request?.targetTime.minutes ?? 45))
   const [submitted, setSubmitted] = useState(false)
+  const [generateError, setGenerateError] = useState<string | null>(null)
 
   const [min, avg, max] = [minE, avgE, maxE].map((v) => parseInt(v, 10))
   const km = parseFloat(distance)
@@ -63,14 +64,20 @@ export function PlanPage() {
     e.preventDefault()
     setSubmitted(true)
     if (postalError || distanceError || timeError || elevationError) return
-    await findRoutes({
-      postalCode: postal,
-      targetDistanceKm: km,
-      targetTime: { hours: h, minutes: m },
-      minElevation: min,
-      avgElevation: avg,
-      maxElevation: max,
-    })
+    setGenerateError(null)
+    try {
+      await findRoutes({
+        postalCode: postal,
+        targetDistanceKm: km,
+        targetTime: { hours: h, minutes: m },
+        minElevation: min,
+        avgElevation: avg,
+        maxElevation: max,
+      })
+    } catch (error) {
+      setGenerateError(error instanceof Error ? error.message : 'Could not find routes. Try again.')
+      return
+    }
     navigate('/routes')
   }
 
@@ -192,6 +199,12 @@ export function PlanPage() {
         {submitted && elevationError && (
           <p className="field__hint is-error" role="alert">
             {elevationError}
+          </p>
+        )}
+
+        {generateError && (
+          <p className="field__hint is-error" role="alert">
+            {generateError}
           </p>
         )}
 
