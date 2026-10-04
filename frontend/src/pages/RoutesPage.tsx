@@ -100,9 +100,13 @@ export function RoutesPage() {
         })}
 
         <p className="routes__target">
-          Target: {request.targetDistanceKm} km in {formatTime(request.targetTime)}
+          {request.targetDistanceKm != null
+            ? <>Distance target: {request.targetDistanceKm} km</>
+            : request.targetTime && request.targetPaceMinPerKm != null
+              ? <>Duration + pace target: {formatTime(request.targetTime)} at {request.targetPaceMinPerKm} min/km ({((request.targetTime.hours * 60 + request.targetTime.minutes) / request.targetPaceMinPerKm).toFixed(1)} km)</>
+              : <>Duration target: {request.targetTime ? formatTime(request.targetTime) : 'not set'}</>}
           <br />
-          Elevation: {request.minElevation} m min · {request.avgElevation} m avg · {request.maxElevation} m max
+          Elevation change from start: {request.minElevation} m min · {request.avgElevation} m avg · {request.maxElevation} m max
         </p>
       </section>
     </main>

@@ -17,6 +17,15 @@ const MAX_ACCURACY_M = 30
 // Ignore moves under 5 m: GPS drifts a few metres even when you stand still.
 const MIN_STEP_KM = 0.005
 
+// One pace sample per ~100 m: fine enough for a graph, small enough to store with every run.
+const SAMPLE_EVERY_KM = 0.1
+
+function withSample(run: RunSession): RunSession {
+  const last = run.samples[run.samples.length - 1]
+  if (run.distanceKm - last.km < SAMPLE_EVERY_KM) return run
+  return { ...run, samples: [...run.samples, { t: run.elapsedMs / 1000, km: run.distanceKm }] }
+}
+
 function advance(run: RunSession, dtMs: number): RunSession {
   const total = run.route.distanceKm
   const grade = gradeAt(run.route.points, run.distanceKm, total)
@@ -113,7 +122,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       setRun((r) => {
         if (!r || r.status !== 'running') return r
         // Demo: the simulator moves the runner. GPS: only the clock ticks; distance comes from addGpsFix.
-        return r.mode === 'demo' ? advance(r, dt * SIM_SPEED) : { ...r, elapsedMs: r.elapsedMs + dt }
+        return withSample(r.mode === 'demo' ? advance(r, dt * SIM_SPEED) : { ...r, elapsedMs: r.elapsedMs + dt })
       })
     }, TICK_MS)
     return () => clearInterval(id)
@@ -131,6 +140,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         distanceKm: 0,
         mode: DEMO_MODE ? 'demo' : 'gps',
         position: null,
+        samples: [{ t: 0, km: 0 }],
       })
     },
     [result],
@@ -150,6 +160,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       const { route } = run
       const fraction = run.distanceKm / route.distanceKm
       const done = route.points.slice(0, Math.max(1, Math.floor(fraction * (route.points.length - 1)) + 1))
+      // Close the graph at the exact finish, since the last 100 m sample can be a little behind.
+      const last = run.samples[run.samples.length - 1]
+      const samples = run.distanceKm > last.km ? [...run.samples, { t: run.elapsedMs / 1000, km: run.distanceKm }] : run.samples
       const record: RunRecord = {
         id: makeId(),
         routeId: route.id,
@@ -159,6 +172,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         distanceKm: Math.round(run.distanceKm * 100) / 100,
         elevationGain: Math.round(route.elevationGain * fraction),
         points: [...done, sampleRoute(route.points, fraction)].map(({ lat, lng }) => ({ lat, lng })),
+        paceSamples: samples.map((s) => ({ t: Math.round(s.t * 10) / 10, km: Math.round(s.km * 1000) / 1000 })),
         plannedRoute: route,
       }
       setRuns((rs) => [record, ...rs])

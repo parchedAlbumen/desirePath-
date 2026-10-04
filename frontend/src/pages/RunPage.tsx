@@ -2,6 +2,7 @@ import { Activity, Pause, Play, Square } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ElevationProfile } from '../components/ElevationChart.tsx'
+import { PaceChart } from '../components/PaceChart.tsx'
 import { RouteMap } from '../components/RouteMap.tsx'
 import { useAppState } from '../hooks/useAppState.ts'
 import { MIN_SAVE_KM } from '../config.ts'
@@ -126,7 +127,7 @@ function LiveRun({ run }: { run: RunSession }) {
             <dt className="stat-label">Elevation</dt>
             <dd>
               {Math.round(here.elevation)}
-              <small>m · current</small>
+              <small>m · from start</small>
             </dd>
           </div>
         </dl>
@@ -138,6 +139,8 @@ function LiveRun({ run }: { run: RunSession }) {
           totalKm={route.distanceKm}
           plannedGain={route.elevationGain}
         />
+
+        <PaceChart samples={run.samples} avgSecPerKm={run.distanceKm > 0.05 ? elapsedSec / run.distanceKm : null} />
 
         <div className="run__actions">
           {!finished &&

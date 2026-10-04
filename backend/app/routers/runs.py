@@ -11,7 +11,7 @@ router = APIRouter(prefix="/api/runs", tags=["runs"])
 # All runs are kept (stats need the full history); the frontend decides how many to show.
 _COLUMNS = (
     "id, route_id, route_name, started_at, duration_sec, distance_km, "
-    "elevation_gain, points, planned_route, is_favorite"
+    "elevation_gain, points, planned_route, is_favorite, pace_samples"
 )
 
 
@@ -78,14 +78,15 @@ def get_run(run_id: int, user_id: int = Depends(get_current_user_id), conn=Depen
 def create_run(body: RunCreate, user_id: int = Depends(get_current_user_id), conn=Depends(get_db)):
     run = conn.execute(
         f"""INSERT INTO runs (user_id, route_id, route_name, started_at, duration_sec,
-                              distance_km, elevation_gain, points, planned_route, is_favorite)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING {_COLUMNS}""",
+                              distance_km, elevation_gain, points, planned_route, is_favorite, pace_samples)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING {_COLUMNS}""",
         (
             user_id, body.route_id, body.route_name, body.started_at, body.duration_sec,
             body.distance_km, body.elevation_gain,
             Jsonb([p.model_dump() for p in body.points]),
             Jsonb(body.planned_route) if body.planned_route is not None else None,
             body.is_favorite,
+            Jsonb([p.model_dump() for p in body.pace_samples]),
         ),
     ).fetchone()
     return run

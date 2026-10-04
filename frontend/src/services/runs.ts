@@ -1,5 +1,5 @@
 // Run history stored on the backend (/api/runs). Every call needs the login token from services/auth.ts.
-import type { GeneratedRoute, RunRecord } from '../types/route.ts'
+import type { GeneratedRoute, PaceSample, RunRecord } from '../types/route.ts'
 import { AUTH_TOKEN_KEY } from './auth.ts'
 import { ApiError, errorFromNetwork, errorFromResponse } from './httpError.ts'
 
@@ -19,6 +19,7 @@ interface ServerRun {
   points: { lat: number; lng: number }[]
   plannedRoute: GeneratedRoute | null
   isFavorite: boolean
+  paceSamples: PaceSample[]
 }
 
 export function hasAuthToken(): boolean {
@@ -40,6 +41,7 @@ function fromServer(run: ServerRun): RunRecord {
     distanceKm: run.distanceKm,
     elevationGain: run.elevationGain,
     points: run.points,
+    paceSamples: run.paceSamples,
     plannedRoute: run.plannedRoute ?? undefined,
     isFavorite: run.isFavorite,
   }

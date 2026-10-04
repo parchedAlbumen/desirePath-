@@ -1,7 +1,9 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validator
 from pydantic.alias_generators import to_camel
+
+from app.schemas.generate import CalorieRange
 
 
 class _CamelModel(BaseModel):
@@ -15,6 +17,11 @@ class RunPoint(BaseModel):
     lng: float
 
 
+class PaceSample(BaseModel):
+    t: float = Field(ge=0)  # elapsed seconds (paused time excluded)
+    km: float = Field(ge=0)  # distance covered at that moment
+
+
 class RunCreate(_CamelModel):
     route_id: str | None = None  # the generated route's id (a string, not a routes.id)
     route_name: str = Field(min_length=1)
@@ -25,6 +32,7 @@ class RunCreate(_CamelModel):
     points: list[RunPoint] = []
     planned_route: dict | None = None  # the GeneratedRoute JSON, stored as-is
     is_favorite: bool = False
+    pace_samples: list[PaceSample] = Field(default=[], max_length=2000)  # ~200 km at one per 100 m
 
 
 class RunUpdate(_CamelModel):
@@ -33,6 +41,12 @@ class RunUpdate(_CamelModel):
 
 class Run(RunCreate):
     id: int
+
+    @computed_field
+    @property
+    def estimated_calories(self) -> CalorieRange:
+        """Worked out from the recorded distance and climb when read, so older runs get it too."""
+        return CalorieRange.estimate(self.distance_km, self.elevation_gain)
 
 
 class WeekStats(_CamelModel):
