@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app import config, errors
 from app.db import close_pool, get_connection, open_pool
-from app.routers import auth, generate, routes
+from app.routers import auth, generate, routes, runs
 
 
 # Show our own log lines (rate limits, ORS failures, validation errors) in the uvicorn terminal.
@@ -43,6 +43,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(generate.router)  # before routes: keeps /generate clear of /{route_id}
 app.include_router(routes.router)
+app.include_router(runs.router)
 
 
 @app.get("/api/health")
