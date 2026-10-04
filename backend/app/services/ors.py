@@ -75,6 +75,8 @@ def _translate(e: httpx.HTTPError) -> ORSError:
             return ORSRateLimited("openrouteservice rate limit reached", int(retry_after) if retry_after.isdigit() else None)
         if code == 404:  # ORS error 2010: "Could not find routable point" near the start
             return NoRoutablePath("no walkable path near the start point")
+        if code == 403 and "quota" in e.response.text.lower():  # ORS answers an exhausted quota with 403, not 429
+            return ORSRateLimited("openrouteservice quota exceeded")
         if code in (401, 403):
             return ORSConfigError("openrouteservice rejected the API key")
         return ORSError(f"openrouteservice returned HTTP {code}")
