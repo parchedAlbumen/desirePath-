@@ -1,18 +1,17 @@
-import { Activity, Pause, Play, Square, Volume2, VolumeX } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { Activity, Pause, Play, Square } from 'lucide-react'
+import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ElevationProfile } from '../components/ElevationChart.tsx'
 import { RouteMap } from '../components/RouteMap.tsx'
 import { useAppState } from '../hooks/useAppState.ts'
-import { pickCoachLine, speak, stopSpeaking } from '../services/coach.ts'
 import type { RunSession } from '../state/context.ts'
 import { LIME } from '../utils/difficulty.ts'
 import { formatDuration, formatPace } from '../utils/format.ts'
-import { gradeAt, sampleRoute } from '../utils/geo.ts'
+import { sampleRoute } from '../utils/geo.ts'
 import './RunPage.css'
 
-// New coaching line every half kilometre.
-const COACH_EVERY_KM = 0.5
+// The audio coach UI was removed for now. To bring it back, see services/coach.ts
+// (pickCoachLine + speak) and the coachOn/setCoachOn state in AppStateProvider.
 
 export function RunPage() {
   const { run } = useAppState()
@@ -35,7 +34,7 @@ function NoRun() {
 }
 
 function LiveRun({ run }: { run: RunSession }) {
-  const { pauseRun, resumeRun, endRun, coachOn, setCoachOn, gps } = useAppState()
+  const { pauseRun, resumeRun, endRun, gps } = useAppState()
   const navigate = useNavigate()
   const [confirmEnd, setConfirmEnd] = useState(false)
   const [resumeAfterPrompt, setResumeAfterPrompt] = useState(false)
@@ -49,20 +48,6 @@ function LiveRun({ run }: { run: RunSession }) {
 
   const mapRoutes = useMemo(() => [{ id: route.id, points: route.points, color: LIME, selected: true }], [route])
   const elevations = useMemo(() => route.points.map((p) => p.elevation), [route])
-
-  const step = Math.floor(run.distanceKm / COACH_EVERY_KM)
-  const line = finished
-    ? 'Route complete. That one was all you.'
-    : pickCoachLine(step, gradeAt(route.points, run.distanceKm, route.distanceKm), remainingKm)
-
-  useEffect(() => {
-    if (coachOn) speak(line)
-  }, [line, coachOn])
-
-  const toggleCoach = () => {
-    if (coachOn) stopSpeaking()
-    setCoachOn(!coachOn)
-  }
 
   const onEnd = () => {
     if (!finished) {
@@ -158,24 +143,6 @@ function LiveRun({ run }: { run: RunSession }) {
           totalKm={route.distanceKm}
           plannedGain={route.elevationGain}
         />
-
-        <div className="coach">
-          <button
-            type="button"
-            className={`coach__toggle${coachOn ? ' is-on' : ''}`}
-            aria-pressed={coachOn}
-            aria-label={coachOn ? 'Mute audio coach' : 'Unmute audio coach'}
-            onClick={toggleCoach}
-          >
-            {coachOn ? <Volume2 /> : <VolumeX />}
-          </button>
-          <div className="coach__bubble">
-            <p className="eyebrow">Audio coach · {coachOn ? 'On' : 'Off'}</p>
-            <p className="coach__line" aria-live="polite">
-              “{line}”
-            </p>
-          </div>
-        </div>
 
         <div className="run__actions">
           {!finished &&
