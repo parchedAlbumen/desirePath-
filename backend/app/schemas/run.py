@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from pydantic.alias_generators import to_camel
 
 
@@ -15,6 +15,11 @@ class RunPoint(BaseModel):
     lng: float
 
 
+class PaceSample(BaseModel):
+    t: float = Field(ge=0)  # elapsed seconds (paused time excluded)
+    km: float = Field(ge=0)  # distance covered at that moment
+
+
 class RunCreate(_CamelModel):
     route_id: str | None = None  # the generated route's id (a string, not a routes.id)
     route_name: str = Field(min_length=1)
@@ -25,6 +30,7 @@ class RunCreate(_CamelModel):
     points: list[RunPoint] = []
     planned_route: dict | None = None  # the GeneratedRoute JSON, stored as-is
     is_favorite: bool = False
+    pace_samples: list[PaceSample] = Field(default=[], max_length=2000)  # ~200 km at one per 100 m
 
 
 class RunUpdate(_CamelModel):
@@ -33,3 +39,35 @@ class RunUpdate(_CamelModel):
 
 class Run(RunCreate):
     id: int
+
+
+class WeekStats(_CamelModel):
+    run_count: int
+    distance_km: float
+
+    @field_validator("distance_km", mode="before")
+    @classmethod
+    def _two_decimals(cls, v):
+        return round(float(v), 2)
+
+
+class RunStats(_CamelModel):
+    run_count: int
+    total_distance_km: float
+    total_duration_sec: int
+    total_elevation_gain: int
+    avg_pace_sec_per_km: int | None  # seconds per km; null until there's a run long enough to time
+    longest_run_km: float
+    fastest_pace_sec_per_km: int | None
+    biggest_climb: int
+    this_week: WeekStats  # the last 7 days, not since Monday
+
+    @field_validator("avg_pace_sec_per_km", "fastest_pace_sec_per_km", mode="before")
+    @classmethod
+    def _whole_seconds(cls, v):
+        return None if v is None else round(v)
+
+    @field_validator("total_distance_km", "longest_run_km", mode="before")
+    @classmethod
+    def _two_decimals(cls, v):
+        return round(float(v), 2)

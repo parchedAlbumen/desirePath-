@@ -44,5 +44,10 @@ CREATE TABLE IF NOT EXISTS runs (
     points         JSONB NOT NULL DEFAULT '[]'::jsonb,
     planned_route  JSONB,
     is_favorite    BOOLEAN NOT NULL DEFAULT false,
-    created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+    created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+    pace_samples   JSONB NOT NULL DEFAULT '[]'::jsonb
 );
+
+-- Added after the first release; CREATE TABLE IF NOT EXISTS won't add it to a table that already exists.
+-- Each sample is {"t": elapsed seconds, "km": distance so far}, taken about every 100 m; the pace graph is built from them.
+ALTER TABLE runs ADD COLUMN IF NOT EXISTS pace_samples JSONB NOT NULL DEFAULT '[]'::jsonb;

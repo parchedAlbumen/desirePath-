@@ -11,8 +11,13 @@ export function formatDuration(totalSec: number): string {
 /** min/km as m:ss, or "--:--" before there's enough distance to be meaningful. */
 export function formatPace(elapsedSec: number, distanceKm: number): string {
   if (distanceKm < 0.05) return '--:--'
-  const secPerKm = Math.round(elapsedSec / distanceKm)
-  return `${Math.floor(secPerKm / 60)}:${String(secPerKm % 60).padStart(2, '0')}`
+  return formatSecPerKm(elapsedSec / distanceKm)
+}
+
+/** Seconds per km as m:ss. */
+export function formatSecPerKm(secPerKm: number): string {
+  const s = Math.round(secPerKm)
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 }
 
 /** "OCT 02, 2026 · 7:12 AM" */

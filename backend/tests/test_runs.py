@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta, timezone
 import uuid
 
 import pytest
@@ -14,6 +15,7 @@ RUN = {
     "durationSec": 1538, "distanceKm": 4.2, "elevationGain": 65,
     "points": [{"lat": 49.28, "lng": -123.12}, {"lat": 49.29, "lng": -123.13}],
     "plannedRoute": {"id": "route-1", "name": "Campus Loop"},
+    "paceSamples": [{"t": 0, "km": 0}, {"t": 36.5, "km": 0.1}, {"t": 1538, "km": 4.2}],
 }
 
 
@@ -41,6 +43,7 @@ def test_runs_crud(emails):
         run = created.json()
         assert run["routeName"] == "Campus Loop" and run["isFavorite"] is False
         assert run["points"][1]["lng"] == -123.13 and run["plannedRoute"]["id"] == "route-1"
+        assert run["paceSamples"] == RUN["paceSamples"]
 
         assert client.get(f"/api/runs/{run['id']}", headers=h).json()["durationSec"] == 1538
         assert [r["id"] for r in client.get("/api/runs", headers=h).json()] == [run["id"]]
@@ -185,42 +188,48 @@ def _ids(client, h):
     return [r["id"] for r in client.get("/api/runs", headers=h).json()]
 
 
-def test_only_the_two_newest_runs_are_kept(emails):
-    with TestClient(app) as client:
-        h = _login(client, emails)
-        first = client.post("/api/runs", json=_run(startedAt="2026-10-01T07:00:00Z"), headers=h).json()
-        second = client.post("/api/runs", json=_run(startedAt="2026-10-02T07:00:00Z"), headers=h).json()
-        assert set(_ids(client, h)) == {first["id"], second["id"]}
-
-        third = client.post("/api/runs", json=_run(startedAt="2026-10-03T07:00:00Z"), headers=h).json()
-        assert _ids(client, h) == [third["id"], second["id"]]  # the oldest was deleted
-        assert client.get(f"/api/runs/{first['id']}", headers=h).status_code == 404
-
-
-def test_favorites_are_not_counted_or_deleted_by_the_cap(emails):
+def test_all_runs_are_kept(emails):
+    """No cap: old runs stay so stats cover the whole history (the frontend shows only the newest)."""
     with TestClient(app) as client:
         h = _login(client, emails)
         starred = client.post("/api/runs", json=_run(startedAt="2026-09-01T07:00:00Z", isFavorite=True), headers=h).json()
-        for day in (1, 2, 3):
-            client.post("/api/runs", json=_run(startedAt=f"2026-10-0{day}T07:00:00Z"), headers=h)
-        ids = _ids(client, h)
-        assert len(ids) == 3 and starred["id"] in ids  # old favorite + the 2 newest others
+        others = [client.post("/api/runs", json=_run(startedAt=f"2026-10-0{d}T07:00:00Z"), headers=h).json() for d in (1, 2, 3)]
+        assert client.patch(f"/api/runs/{starred['id']}", json={"isFavorite": False}, headers=h).status_code == 200
+        assert _ids(client, h) == [r["id"] for r in reversed(others)] + [starred["id"]]
 
 
-def test_unstarring_an_old_run_deletes_it_when_over_the_cap(emails):
+def test_stats_with_no_runs(emails):
+    with TestClient(app) as client:
+        stats = client.get("/api/runs/stats", headers=_login(client, emails))
+        assert stats.status_code == 200, stats.text
+        assert stats.json() == {
+            "runCount": 0, "totalDistanceKm": 0, "totalDurationSec": 0, "totalElevationGain": 0,
+            "avgPaceSecPerKm": None, "longestRunKm": 0, "fastestPaceSecPerKm": None, "biggestClimb": 0,
+            "thisWeek": {"runCount": 0, "distanceKm": 0},
+        }
+
+
+def test_stats_totals_records_and_this_week(emails):
+    now = datetime.now(timezone.utc)
     with TestClient(app) as client:
         h = _login(client, emails)
-        old = client.post("/api/runs", json=_run(startedAt="2026-09-01T07:00:00Z", isFavorite=True), headers=h).json()
-        a = client.post("/api/runs", json=_run(startedAt="2026-10-01T07:00:00Z"), headers=h).json()
-        b = client.post("/api/runs", json=_run(startedAt="2026-10-02T07:00:00Z"), headers=h).json()
-        assert client.patch(f"/api/runs/{old['id']}", json={"isFavorite": False}, headers=h).status_code == 200
-        assert set(_ids(client, h)) == {a["id"], b["id"]}
+        def save(days_ago, km, sec, gain):
+            started = (now - timedelta(days=days_ago)).isoformat()
+            r = client.post("/api/runs", json=_run(startedAt=started, distanceKm=km, durationSec=sec, elevationGain=gain), headers=h)
+            assert r.status_code == 201, r.text
+        save(1, 5.0, 1500, 40)    # 5:00 /km, this week
+        save(3, 10.0, 3600, 120)  # 6:00 /km, this week
+        save(30, 2.0, 840, 10)    # 7:00 /km, a month ago
+        save(2, 0.05, 5, 0)       # GPS blip: 100 s/km, too short to count for pace
 
+        s = client.get("/api/runs/stats", headers=h).json()
+        assert s["runCount"] == 4
+        assert s["totalDistanceKm"] == 17.05 and s["totalDurationSec"] == 5945 and s["totalElevationGain"] == 170
+        assert s["longestRunKm"] == 10.0 and s["biggestClimb"] == 120
+        assert s["fastestPaceSecPerKm"] == 300  # the blip is ignored
+        assert s["avgPaceSecPerKm"] == round(5940 / 17)  # total time / total distance, blip excluded
+        assert s["thisWeek"] == {"runCount": 3, "distanceKm": 15.05}
 
-def test_the_cap_is_per_user(emails):
-    with TestClient(app) as client:
-        mine, theirs = _login(client, emails), _login(client, emails)
-        client.post("/api/runs", json=_run(startedAt="2026-10-01T07:00:00Z"), headers=theirs)
-        for day in (1, 2, 3):
-            client.post("/api/runs", json=_run(startedAt=f"2026-10-0{day}T07:00:00Z"), headers=mine)
-        assert len(_ids(client, theirs)) == 1 and len(_ids(client, mine)) == 2
+        # another user's runs don't leak in, and login is required
+        assert client.get("/api/runs/stats", headers=_login(client, emails)).json()["runCount"] == 0
+        assert client.get("/api/runs/stats").status_code == 401
