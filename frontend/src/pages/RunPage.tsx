@@ -126,7 +126,7 @@ function LiveRun({ run }: { run: RunSession }) {
             <dt className="stat-label">Elevation</dt>
             <dd>
               {Math.round(here.elevation)}
-              <small>m · current</small>
+              <small>m · from start</small>
             </dd>
           </div>
         </dl>
