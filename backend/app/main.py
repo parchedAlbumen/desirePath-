@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app import errors
 from app.db import close_pool, get_connection, open_pool
 from app.routers import auth, generate, routes
 
@@ -15,6 +16,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="desirePath API", lifespan=lifespan)
+
+errors.register(app)
 
 app.add_middleware(
     CORSMiddleware,

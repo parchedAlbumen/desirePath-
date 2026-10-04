@@ -83,19 +83,37 @@ def _fetch_loops(place, km: float, seeds: range) -> list[ors.RawRoute]:
     """Requests one loop per seed in parallel; skips failures, raises only if all fail."""
     with ThreadPoolExecutor(max_workers=len(seeds)) as pool:
         futures = [pool.submit(ors.round_trip, place.lat, place.lng, km, s, 3 + s % 2) for s in seeds]
-        loops, last_error = [], None
+        loops, errors = [], []
         for f in futures:
             try:
                 loops.append(f.result())
             except ors.ORSError as e:
-                last_error = e
+                errors.append(e)
     if not loops:
-        raise last_error or ors.ORSError("no routes returned")
+        # Most actionable error first: a bad key or quota problem explains more than a generic failure.
+        for kind in (ors.ORSConfigError, ors.ORSRateLimited, ors.NoRoutablePath, ors.ORSTimeout):
+            for e in errors:
+                if isinstance(e, kind):
+                    raise e
+        raise errors[0] if errors else ors.ORSError("no routes returned")
     return loops
 
 
-def generate(req: GenerateRequest) -> RouteResponse:
-    place = geocode.geocode_postal(req.postal_code.strip().upper())
+def start_label(req: GenerateRequest, place: ors.Place) -> str:
+    """Honest about where the loops start: a guessed point is labelled by area, not by the postal code."""
+    if req.uses_gps:
+        return "Your location"
+    if place.approximate:
+        return f"Near {place.name}"
+    return f"Near {req.postal_code.strip().upper()}"
+
+
+def id_prefix(req: GenerateRequest) -> str:
+    return "gps" if req.uses_gps else req.postal_code.replace(" ", "").upper()
+
+
+def generate(req: GenerateRequest, place: ors.Place | None = None) -> RouteResponse:
+    place = geocode.describe(place or geocode.locate(req))
     target = target_length_km(req)
 
     # ORS treats the requested length as a rough guide (real loops often come out 15-45% long).
@@ -105,7 +123,7 @@ def generate(req: GenerateRequest) -> RouteResponse:
     corrected = target * min(max(target / actual, 0.4), 1.5)
     candidates = probe + _fetch_loops(place, corrected, range(CALIBRATION_LOOPS + 1, CALIBRATION_LOOPS + 1 + N_CANDIDATES))
 
-    code = req.postal_code.replace(" ", "").upper()
+    code = id_prefix(req)
     routes = []
     for difficulty, c in pick(candidates, req):
         pts = _downsample(c.coords)
@@ -131,7 +149,7 @@ def generate(req: GenerateRequest) -> RouteResponse:
         area=RouteArea(
             name=place.name,
             region=place.region,
-            start_label=f"Near {req.postal_code.strip().upper()}",
+            start_label=start_label(req, place),
             start=LatLng(lat=place.lat, lng=place.lng),
         ),
         routes=routes,
