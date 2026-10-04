@@ -1,4 +1,4 @@
-import { ArrowUpRight, MapPin, Navigation } from 'lucide-react'
+import { ArrowUpRight, CheckCircle2, MapPin, Navigation } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { NumberStepper } from '../components/NumberStepper.tsx'
@@ -169,6 +169,14 @@ export function PlanPage() {
             {locating ? 'Getting your location…' : useCurrentLocation ? 'Using your current location' : 'Use my current location'}
           </button>
           {useCurrentLocation && !locating && (
+            <p className="plan__location-ready" role="status">
+              <CheckCircle2 aria-hidden="true" />
+              <span>
+                <strong>Location ready.</strong> Scroll down and tap “Find Routes From My Location” to create your routes.
+              </span>
+            </p>
+          )}
+          {useCurrentLocation && !locating && (
             <button
               type="button"
               className="plan__postal-choice"
@@ -261,7 +269,7 @@ export function PlanPage() {
 
         <button type="submit" className="btn btn--primary btn--block plan__submit" disabled={loading}>
           <ArrowUpRight aria-hidden="true" />
-          {loading ? 'Finding routes…' : 'Find My Routes'}
+          {loading ? 'Finding routes…' : useCurrentLocation ? 'Find Routes From My Location' : 'Find My Routes'}
         </button>
       </form>
 
