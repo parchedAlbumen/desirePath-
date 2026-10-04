@@ -45,9 +45,11 @@ def get_route(route_id: int, conn=Depends(get_db)):
 def create_route(body: RouteCreate, conn=Depends(get_db)):
     try:
         route = conn.execute(
-            """INSERT INTO routes (user_id, name, distance, elevation_gain, elevation_loss)
-               VALUES (%s, %s, %s, %s, %s) RETURNING *""",
-            (body.user_id, body.name, body.distance, body.elevation_gain, body.elevation_loss),
+            """INSERT INTO routes (user_id, name, distance, elevation_gain, elevation_loss,
+                                   difficulty, terrain, estimated_minutes)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING *""",
+            (body.user_id, body.name, body.distance, body.elevation_gain, body.elevation_loss,
+             body.difficulty, body.terrain, body.estimated_minutes),
         ).fetchone()
     except errors.ForeignKeyViolation:
         raise HTTPException(400, f"User {body.user_id} does not exist")

@@ -52,3 +52,19 @@ def test_create_route_unknown_user():
     with TestClient(app) as client:
         r = client.post("/api/routes", json={"user_id": -1, "name": "x", "distance": 1})
         assert r.status_code == 400
+
+
+def test_route_generated_fields(user_id):
+    with TestClient(app) as client:
+        base = {"user_id": user_id, "name": "saved", "distance": 3.1}
+        created = client.post("/api/routes", json={**base, "difficulty": "hard", "terrain": "hilly", "estimated_minutes": 25})
+        assert created.status_code == 201, created.text
+        got = client.get(f"/api/routes/{created.json()['id']}").json()
+        assert (got["difficulty"], got["terrain"], got["estimated_minutes"]) == ("hard", "hilly", 25)
+
+        # all three are optional
+        plain = client.post("/api/routes", json=base).json()
+        assert plain["difficulty"] is None and plain["estimated_minutes"] is None
+
+        assert client.post("/api/routes", json={**base, "difficulty": "extreme"}).status_code == 422
+        assert client.post("/api/routes", json={**base, "estimated_minutes": -5}).status_code == 422
