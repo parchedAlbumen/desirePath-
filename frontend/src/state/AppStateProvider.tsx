@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { generateRoutes } from '../services/api.ts'
 import { stopSpeaking } from '../services/coach.ts'
-import { loadFavoriteRuns, loadRuns, mostRecentRuns, saveFavoriteRuns, saveRuns } from '../services/history.ts'
+import { loadGuestRuns, mostRecentRuns, saveGuestRuns } from '../services/history.ts'
 import { createRun, fetchRuns, hasAuthToken, isServerRunId, setRunFavorite } from '../services/runs.ts'
 import type { GeneratedRoute, RouteRequest, RouteResponse, RunRecord } from '../types/route.ts'
 import { AppStateContext, type AppState, type RunSession } from './context.ts'
@@ -34,29 +34,25 @@ const describe = (error: unknown) => (error instanceof Error ? error.message : '
 
 const makeId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
 
-export function AppStateProvider({ children, userEmail }: { children: ReactNode; userEmail: string | null }) {
+export function AppStateProvider({ children }: { children: ReactNode }) {
   const [request, setRequest] = useState<RouteRequest | null>(null)
   const [result, setResult] = useState<RouteResponse | null>(null)
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [run, setRun] = useState<RunSession | null>(null)
-  // Signed in (has a login token): runs and favorites live on the backend, and browser storage is only
-  // a stand-in until they load. Signed out: everything stays in browser storage, as before.
+  // Signed in (has a login token): runs and favorites live on the backend. Signed out: runs are kept only
+  // for this tab (sessionStorage) and can't be starred; saving them for good is a sign-in perk.
   const [useBackend] = useState(hasAuthToken)
-  const [runs, setRuns] = useState<RunRecord[]>(() => loadRuns(userEmail))
-  const [localFavorites, setLocalFavorites] = useState<RunRecord[]>(() =>
-    useBackend ? [] : loadFavoriteRuns(userEmail, loadRuns(userEmail)),
-  )
+  const [runs, setRuns] = useState<RunRecord[]>(() => (useBackend ? [] : loadGuestRuns()))
   const [syncError, setSyncError] = useState<string | null>(null)
   const [coachOn, setCoachOn] = useState(true)
 
   const history = useMemo(() => mostRecentRuns(runs), [runs])
-  const favorites = useMemo(
-    () => (useBackend ? runs.filter((r) => r.isFavorite) : localFavorites),
-    [useBackend, runs, localFavorites],
-  )
+  const favorites = useMemo(() => (useBackend ? runs.filter((r) => r.isFavorite) : []), [useBackend, runs])
 
-  useEffect(() => saveRuns(userEmail, history), [history, userEmail])
+  useEffect(() => {
+    if (!useBackend) saveGuestRuns(runs)
+  }, [useBackend, runs])
 
   useEffect(() => {
     if (!useBackend) return
@@ -185,12 +181,7 @@ export function AppStateProvider({ children, userEmail }: { children: ReactNode;
   const toggleFavorite = useCallback(
     async (target: RunRecord) => {
       const makeFavorite = !favorites.some((f) => f.id === target.id)
-      if (!useBackend) {
-        const next = makeFavorite ? [...localFavorites, target] : localFavorites.filter((f) => f.id !== target.id)
-        saveFavoriteRuns(userEmail, next)
-        setLocalFavorites(next)
-        return makeFavorite
-      }
+      if (!useBackend) throw new Error('Sign in to save favorites.') // the page asks guests to sign in first
       const replace = (id: string, run: RunRecord) => setRuns((rs) => rs.map((r) => (r.id === id ? run : r)))
       replace(target.id, { ...target, isFavorite: makeFavorite }) // optimistic
       try {
@@ -205,7 +196,7 @@ export function AppStateProvider({ children, userEmail }: { children: ReactNode;
         throw error
       }
     },
-    [favorites, localFavorites, useBackend, userEmail],
+    [favorites, useBackend],
   )
 
   const value = useMemo<AppState>(
@@ -224,6 +215,7 @@ export function AppStateProvider({ children, userEmail }: { children: ReactNode;
       gps: { accuracy: gpsWatch.fix?.accuracy ?? null, error: gpsWatch.error },
       history,
       favorites,
+      signedIn: useBackend,
       syncError,
       toggleFavorite,
       coachOn,
@@ -244,6 +236,7 @@ export function AppStateProvider({ children, userEmail }: { children: ReactNode;
       gpsWatch.error,
       history,
       favorites,
+      useBackend,
       syncError,
       toggleFavorite,
       coachOn,

@@ -1,9 +1,10 @@
-import { CircleCheck, LogOut } from 'lucide-react'
+import { CircleCheck, KeyRound, LogOut } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { BottomNav } from './components/BottomNav.tsx'
 import { AuthPage } from './pages/AuthPage.tsx'
 import { AUTH_TOKEN_KEY } from './services/auth.ts'
+import { ChangePasswordPage } from './pages/ChangePasswordPage.tsx'
 import { HistoryPage } from './pages/HistoryPage.tsx'
 import { PlanPage } from './pages/PlanPage.tsx'
 import { RoutesPage } from './pages/RoutesPage.tsx'
@@ -48,7 +49,7 @@ function App() {
   }
 
   return (
-    <AppStateProvider key={accountEmail ?? 'anonymous'} userEmail={accountEmail}>
+    <AppStateProvider key={accountEmail ?? 'anonymous'}>
       <div className="app">
         <header className={`account-bar${isAuthenticated ? ' account-bar--signed-in' : ''}`}>
           {isAuthenticated ? (
@@ -65,10 +66,16 @@ function App() {
                   <span className="account-chip__email">{accountEmail}</span>
                 </span>
               </div>
-              <button type="button" className="account-bar__button" onClick={onLogout}>
-                <LogOut aria-hidden="true" />
-                Log out
-              </button>
+              <div className="account-bar__actions">
+                <Link className="account-bar__button" to="/account/password">
+                  <KeyRound aria-hidden="true" />
+                  Password
+                </Link>
+                <button type="button" className="account-bar__button" onClick={onLogout}>
+                  <LogOut aria-hidden="true" />
+                  Log out
+                </button>
+              </div>
             </>
           ) : isAuthPage ? (
             <Link className="account-bar__button" to={pathname === '/login' ? '/signup' : '/login'}>
@@ -101,6 +108,10 @@ function App() {
           <Route
             path="/signup"
             element={isAuthenticated ? <Navigate to="/" replace /> : <AuthPage onAuthenticated={onAuthenticated} />}
+          />
+          <Route
+            path="/account/password"
+            element={isAuthenticated ? <ChangePasswordPage /> : <Navigate to="/login" replace />}
           />
           <Route path="/" element={<PlanPage />} />
           <Route path="/routes" element={<RoutesPage />} />

@@ -38,3 +38,22 @@ export async function submitCredentials(mode: AuthMode, credentials: Credentials
   sessionStorage.setItem(AUTH_TOKEN_KEY, body.access_token)
   return body.user?.email ?? credentials.email
 }
+
+/** Changes the logged-in user's password. Rejects with the backend's message, e.g. "Current password is wrong". */
+export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
+  const what = 'Change password'
+  let response: Response
+  try {
+    response = await fetch('/api/auth/password', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${sessionStorage.getItem(AUTH_TOKEN_KEY) ?? ''}`,
+      },
+      body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+    })
+  } catch (cause) {
+    throw errorFromNetwork(what, cause)
+  }
+  if (!response.ok) throw await errorFromResponse(response, what)
+}

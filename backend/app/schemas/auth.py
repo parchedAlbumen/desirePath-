@@ -11,6 +11,11 @@ class RegisterRequest(LoginRequest):
     password: str = Field(min_length=8, max_length=72)  # bcrypt only uses the first 72 bytes
 
 
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str = Field(min_length=8, max_length=72)  # same rules as sign-up
+
+
 class User(BaseModel):
     id: int
     email: str
