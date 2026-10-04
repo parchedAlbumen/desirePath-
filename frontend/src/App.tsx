@@ -1,4 +1,4 @@
-import { CircleCheck, KeyRound, LogOut } from 'lucide-react'
+import { CircleCheck, KeyRound, LogOut, Route as RouteIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { BottomNav } from './components/BottomNav.tsx'
