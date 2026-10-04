@@ -1,6 +1,7 @@
-import { CircleCheck, KeyRound, LogOut, Route as RouteIcon } from 'lucide-react'
+import { CircleCheck, Route as RouteIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
+import { AccountMenu } from './components/AccountMenu.tsx'
 import { BottomNav } from './components/BottomNav.tsx'
 import { AuthPage } from './pages/AuthPage.tsx'
 import { AUTH_TOKEN_KEY } from './services/auth.ts'
@@ -76,30 +77,8 @@ function App() {
           </h1>
 
           {isAuthenticated ? (
-            <>
-              <div className="account-chip" title={accountEmail ?? undefined}>
-                <span className="account-chip__avatar" aria-hidden="true">
-                  {(accountEmail?.[0] ?? '?').toUpperCase()}
-                </span>
-                <span className="account-chip__text">
-                  <span className="account-chip__status">
-                    <i aria-hidden="true" />
-                    Signed in
-                  </span>
-                  <span className="account-chip__email">{accountEmail}</span>
-                </span>
-              </div>
-              <div className="account-bar__actions">
-                <Link className="account-bar__button" to="/account/password">
-                  <KeyRound aria-hidden="true" />
-                  Password
-                </Link>
-                <button type="button" className="account-bar__button" onClick={onLogout}>
-                  <LogOut aria-hidden="true" />
-                  Log out
-                </button>
-              </div>
-            </>
+            // One icon instead of email + buttons, so the title keeps its room on phones
+            <AccountMenu email={accountEmail} onLogout={onLogout} />
           ) : isAuthPage ? (
             <Link className="account-bar__button" to={pathname === '/login' ? '/signup' : '/login'}>
               {pathname === '/login' ? 'Create account' : 'Sign in'}
