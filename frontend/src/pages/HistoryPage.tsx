@@ -63,22 +63,22 @@ export function HistoryPage() {
       <p className="crumb">Your running record</p>
       <h1 className="page-title">Every run counts.</h1>
 
-      <section className="big-picture" aria-label="All-time totals">
+      <section className="big-picture" aria-label="Saved run totals">
         <header>
           <p className="eyebrow">The big picture</p>
-          <span>All time</span>
+          <span>Latest {history.length} of 2</span>
         </header>
         <dl>
           <div>
-            <dt>Total km</dt>
+            <dt>Saved km</dt>
             <dd>{formatKm(totalKm)}</dd>
           </div>
           <div>
-            <dt>Total runs</dt>
+            <dt>Saved runs</dt>
             <dd>{history.length}</dd>
           </div>
           <div>
-            <dt>Elevation · m</dt>
+            <dt>Saved elevation · m</dt>
             <dd>{totalGain}</dd>
           </div>
         </dl>

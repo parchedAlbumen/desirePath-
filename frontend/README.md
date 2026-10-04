@@ -19,7 +19,7 @@ Both requests use `Content-Type: application/json` and the same body:
 The frontend treats any 2xx response as success and displays a non-2xx or network error to the user. The Vite development server proxies `/api` to `http://localhost:8000`.
 After a successful response, the frontend stores a tab-scoped sign-in marker so the shared sign-in/log-out control updates across pages. This is UI state only; replace it with the backend's authenticated session mechanism when one is implemented.
 
-Completed runs are kept in browser storage. Favorite run IDs are saved separately in local storage, scoped to the signed-in email on this browser, so favoriting a run does not remove it from recent runs.
+The two most recent completed runs are kept in browser storage, scoped to the signed-in email on this browser. The app's current authentication is UI-only, so this data is not synced between browsers or devices. Favorite run IDs are saved separately in local storage, scoped to the signed-in email, so favoriting a run does not remove it from recent runs.
 
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { generateRoutes } from '../services/api.ts'
 import { stopSpeaking } from '../services/coach.ts'
-import { loadRuns, saveRuns } from '../services/history.ts'
+import { loadRuns, mostRecentRuns, saveRuns } from '../services/history.ts'
 import type { GeneratedRoute, RouteRequest, RouteResponse, RunRecord } from '../types/route.ts'
 import { AppStateContext, type AppState, type RunSession } from './context.ts'
 import { DEMO_MODE, SIM_SPEED } from '../config.ts'
@@ -31,16 +31,16 @@ function advance(run: RunSession, dtMs: number): RunSession {
 
 const makeId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
 
-export function AppStateProvider({ children }: { children: ReactNode }) {
+export function AppStateProvider({ children, userEmail }: { children: ReactNode; userEmail: string | null }) {
   const [request, setRequest] = useState<RouteRequest | null>(null)
   const [result, setResult] = useState<RouteResponse | null>(null)
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [run, setRun] = useState<RunSession | null>(null)
-  const [history, setHistory] = useState<RunRecord[]>(loadRuns)
+  const [history, setHistory] = useState<RunRecord[]>(() => loadRuns(userEmail))
   const [coachOn, setCoachOn] = useState(true)
 
-  useEffect(() => saveRuns(history), [history])
+  useEffect(() => saveRuns(userEmail, history), [history, userEmail])
 
   // Every GPS reading comes through here; only trustworthy movement adds distance.
   const addGpsFix = useCallback((fix: GpsFix) => {
@@ -131,7 +131,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         points: [...done, sampleRoute(route.points, fraction)].map(({ lat, lng }) => ({ lat, lng })),
         plannedRoute: route,
       }
-      setHistory((h) => [record, ...h])
+      setHistory((h) => mostRecentRuns([record, ...h]))
     }
     setRun(null)
   }, [run])
