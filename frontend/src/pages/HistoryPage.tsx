@@ -1,11 +1,12 @@
 import { ArrowDown, ArrowUp, Download, Mountain, Play, Share2, Star } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { PaceChart } from '../components/PaceChart.tsx'
 import { RouteMap } from '../components/RouteMap.tsx'
 import { useAppState } from '../hooks/useAppState.ts'
 import type { GeneratedRoute, LatLng, RunRecord } from '../types/route.ts'
 import { PRIMARY } from '../utils/difficulty.ts'
-import { formatDuration, formatKm, formatRunDate } from '../utils/format.ts'
+import { formatDuration, formatKm, formatPace, formatRunDate } from '../utils/format.ts'
 import './HistoryPage.css'
 
 export function HistoryPage() {
@@ -219,7 +220,12 @@ function RunItem({
             <dt>m gain</dt>
             <dd>{run.elevationGain}</dd>
           </div>
+          <div>
+            <dt>min/km</dt>
+            <dd>{formatPace(run.durationSec, run.distanceKm)}</dd>
+          </div>
         </dl>
+        {selected && run.paceSamples && <PaceChart samples={run.paceSamples} avgSecPerKm={run.durationSec / run.distanceKm} />}
         {selected && (
           <div className="run-item__actions">
             <button type="button" className="btn btn--primary" onClick={onRun}>
@@ -317,7 +323,8 @@ function isRoutePoint(value: unknown): value is LatLng & { elevation: number } {
 
 async function shareRun(run: RunRecord, setMessage: (message: string) => void) {
   const url = new URL('/history', window.location.origin)
-  url.searchParams.set('run', JSON.stringify(run))
+  const { paceSamples: _paceSamples, ...shareable } = run // keeps the link short
+  url.searchParams.set('run', JSON.stringify(shareable))
   const text = `${run.routeName} · ${formatKm(run.distanceKm)} km`
   try {
     if (navigator.share) {

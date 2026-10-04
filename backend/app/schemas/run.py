@@ -15,6 +15,11 @@ class RunPoint(BaseModel):
     lng: float
 
 
+class PaceSample(BaseModel):
+    t: float = Field(ge=0)  # elapsed seconds (paused time excluded)
+    km: float = Field(ge=0)  # distance covered at that moment
+
+
 class RunCreate(_CamelModel):
     route_id: str | None = None  # the generated route's id (a string, not a routes.id)
     route_name: str = Field(min_length=1)
@@ -25,6 +30,7 @@ class RunCreate(_CamelModel):
     points: list[RunPoint] = []
     planned_route: dict | None = None  # the GeneratedRoute JSON, stored as-is
     is_favorite: bool = False
+    pace_samples: list[PaceSample] = Field(default=[], max_length=2000)  # ~200 km at one per 100 m
 
 
 class RunUpdate(_CamelModel):
