@@ -30,7 +30,7 @@ export interface AppState {
   startRun: (route: GeneratedRoute) => void
   pauseRun: () => void
   resumeRun: () => void
-  endRun: () => void
+  endRun: (save?: boolean) => void
   /** GPS status for the live run screen. */
   gps: { accuracy: number | null; error: string | null }
 

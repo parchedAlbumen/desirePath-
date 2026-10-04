@@ -3,7 +3,7 @@ import { useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { RouteMap } from '../components/RouteMap.tsx'
 import { useAppState } from '../hooks/useAppState.ts'
-import { loadFavoriteRunIds, saveFavoriteRunIds } from '../services/history.ts'
+import { loadFavoriteRuns, saveFavoriteRuns } from '../services/history.ts'
 import type { GeneratedRoute, LatLng, RunRecord } from '../types/route.ts'
 import { LIME } from '../utils/difficulty.ts'
 import { formatDuration, formatKm, formatRunDate } from '../utils/format.ts'
@@ -13,7 +13,7 @@ export function HistoryPage() {
   const { history, startRun } = useAppState()
   const navigate = useNavigate()
   const accountEmail = sessionStorage.getItem('desirepath-user-email')
-  const [favoriteRunIds, setFavoriteRunIds] = useState(() => loadFavoriteRunIds(accountEmail))
+  const [savedFavorites, setSavedFavorites] = useState(() => loadFavoriteRuns(accountEmail, history))
   const [searchParams, setSearchParams] = useSearchParams()
   const [newestFirst, setNewestFirst] = useState(true)
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null)
@@ -25,16 +25,24 @@ export function HistoryPage() {
     () => [...history].sort((a, b) => (newestFirst ? -1 : 1) * a.startedAt.localeCompare(b.startedAt)),
     [history, newestFirst],
   )
-  const favoriteRuns = useMemo(() => runs.filter((run) => favoriteRunIds.includes(run.id)), [runs, favoriteRunIds])
+  const favoriteRuns = useMemo(
+    () =>
+      [...savedFavorites].sort(
+        (a, b) => (newestFirst ? -1 : 1) * a.startedAt.localeCompare(b.startedAt),
+      ),
+    [savedFavorites, newestFirst],
+  )
   const totalKm = history.reduce((sum, run) => sum + run.distanceKm, 0)
   const totalGain = history.reduce((sum, run) => sum + run.elevationGain, 0)
 
   const toggleFavorite = (run: RunRecord) => {
-    const isFavorite = favoriteRunIds.includes(run.id)
-    const nextIds = isFavorite ? favoriteRunIds.filter((id) => id !== run.id) : [...favoriteRunIds, run.id]
+    const isFavorite = savedFavorites.some((favorite) => favorite.id === run.id)
+    const nextFavorites = isFavorite
+      ? savedFavorites.filter((favorite) => favorite.id !== run.id)
+      : [...savedFavorites, run]
     try {
-      saveFavoriteRunIds(accountEmail, nextIds)
-      setFavoriteRunIds(nextIds)
+      saveFavoriteRuns(accountEmail, nextFavorites)
+      setSavedFavorites(nextFavorites)
       setMessage(isFavorite ? `${run.routeName} removed from favorites.` : `${run.routeName} added to favorites.`)
     } catch (error) {
       setMessage(error instanceof Error ? `Could not save favorite: ${error.message}` : 'Could not save favorite.')
@@ -45,7 +53,7 @@ export function HistoryPage() {
     <RunItem
       key={run.id}
       run={run}
-      isFavorite={favoriteRunIds.includes(run.id)}
+      isFavorite={savedFavorites.some((favorite) => favorite.id === run.id)}
       selected={sharedRun !== null || selectedRunId === run.id}
       onSelect={() => setSelectedRunId((current) => (current === run.id ? null : run.id))}
       onToggleFavorite={() => toggleFavorite(run)}

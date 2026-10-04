@@ -1,5 +1,5 @@
 import { Activity, Pause, Play, Square, Volume2, VolumeX } from 'lucide-react'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ElevationProfile } from '../components/ElevationChart.tsx'
 import { RouteMap } from '../components/RouteMap.tsx'
@@ -37,6 +37,8 @@ function NoRun() {
 function LiveRun({ run }: { run: RunSession }) {
   const { pauseRun, resumeRun, endRun, coachOn, setCoachOn, gps } = useAppState()
   const navigate = useNavigate()
+  const [confirmEnd, setConfirmEnd] = useState(false)
+  const [resumeAfterPrompt, setResumeAfterPrompt] = useState(false)
   const { route } = run
 
   const progress = run.distanceKm / route.distanceKm
@@ -63,7 +65,18 @@ function LiveRun({ run }: { run: RunSession }) {
   }
 
   const onEnd = () => {
+    if (!finished) {
+      setResumeAfterPrompt(run.status === 'running')
+      pauseRun()
+      setConfirmEnd(true)
+      return
+    }
     endRun()
+    navigate('/history')
+  }
+
+  const finishEarly = (save: boolean) => {
+    endRun(save)
     navigate('/history')
   }
 
@@ -183,6 +196,40 @@ function LiveRun({ run }: { run: RunSession }) {
           </button>
         </div>
       </section>
+      {confirmEnd && (
+        <div className="run__dialog-backdrop">
+          <section
+            className="run__dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="end-run-title"
+            aria-describedby="end-run-description"
+          >
+            <h2 id="end-run-title">Save this run?</h2>
+            <p id="end-run-description">
+              You ended your run early. Save the distance and route to your history?
+            </p>
+            <div className="run__dialog-actions">
+              <button type="button" className="btn btn--primary" onClick={() => finishEarly(true)}>
+                Save run
+              </button>
+              <button type="button" className="btn btn--secondary" onClick={() => finishEarly(false)}>
+                Discard
+              </button>
+              <button
+                type="button"
+                className="text-btn"
+                onClick={() => {
+                  setConfirmEnd(false)
+                  if (resumeAfterPrompt) resumeRun()
+                }}
+              >
+                {resumeAfterPrompt ? 'Keep running' : 'Keep paused'}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </main>
   )
 }
