@@ -10,7 +10,7 @@ export interface Duration {
 
 /**
  * What the user submits on the planner form (the agreed request JSON).
- * Elevations are metres above sea level.
+ * Elevation values are metres of change from the route's starting elevation.
  */
 export interface RouteRequest {
   /** Postal code is omitted when the runner shares their current location. */
@@ -19,9 +19,11 @@ export interface RouteRequest {
   startLat?: number
   startLng?: number
   /** How far the runner wants to go. All three routes aim for this length. */
-  targetDistanceKm: number
-  /** How long the runner has. Routes shouldn't take longer than this. */
-  targetTime: Duration
+  targetDistanceKm?: number
+  /** How long the runner has in duration-and-pace mode. */
+  targetTime?: Duration
+  /** Desired pace in minutes per kilometre; paired with targetTime instead of distance. */
+  targetPaceMinPerKm?: number
   minElevation: number
   avgElevation: number
   maxElevation: number

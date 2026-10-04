@@ -52,18 +52,19 @@ export function buildLoop(start: LatLng, km: number, seed: number, headingDeg: n
 
 function elevationProfile(count: number, t: Template, lo: number, hi: number, targetAvg: number): number[] {
   const phase = seededRandom(t.seed * 31)() * TAU
-  const raw = Array.from({ length: count }, (_, i) => {
+  const envelope = Array.from({ length: count }, (_, i) => Math.sin((Math.PI * i) / (count - 1)) ** 0.8)
+  const raw = envelope.map((edge, i) => {
     const x = i / (count - 1)
-    return Math.sin(Math.PI * x) ** 0.8 * (0.55 + 0.45 * Math.sin(TAU * t.humps * x + phase))
+    return edge * (Math.sin(TAU * t.humps * x + phase) + 0.4 * Math.sin(TAU * (t.humps + 1) * x + phase * 1.7))
   })
-  const min = Math.min(...raw)
-  const max = Math.max(...raw)
-  const norm = raw.map((v) => (v - min) / (max - min || 1))
-  // Bend the curve so the route's average lands near the requested average.
-  const mean = norm.reduce((a, b) => a + b, 0) / norm.length
-  const want = Math.min(0.85, Math.max(0.15, (targetAvg - lo) / (hi - lo || 1)))
-  const gamma = Math.log(want) / Math.log(mean)
-  return norm.map((v) => lo + (hi - lo) * v ** gamma)
+  const bias = targetAvg / Math.max(Math.abs(lo), Math.abs(hi), 1)
+  const shifted = raw.map((v, i) => v + envelope[i] * bias * 2)
+  const min = Math.min(...shifted)
+  const max = Math.max(...shifted)
+  return shifted.map((v) =>
+    v < 0 ? (min === 0 ? 0 : (v / Math.abs(min)) * Math.abs(lo))
+    : max === 0 ? 0 : (v / max) * hi,
+  )
 }
 
 export function mockGenerateRoutes(req: RouteRequest): RouteResponse {
@@ -83,21 +84,23 @@ export function mockGenerateRoutes(req: RouteRequest): RouteResponse {
     : lookupArea(req.postalCode ?? '')
   const code = gpsStart ? 'gps' : (req.postalCode ?? '').replace(/\s/g, '')
 
-  const timeBudget = req.targetTime.hours * 60 + req.targetTime.minutes
+  const timeBudget = req.targetTime ? req.targetTime.hours * 60 + req.targetTime.minutes : Infinity
+  const targetKm = req.targetDistanceKm ?? timeBudget / (req.targetPaceMinPerKm ?? MIN_PER_KM)
 
   const routes: GeneratedRoute[] = TEMPLATES.flatMap((t, idx): GeneratedRoute[] => {
-    const hi = req.minElevation + t.band * (req.maxElevation - req.minElevation)
+    const lo = req.minElevation * t.band
+    const hi = req.maxElevation * t.band
     const build = (km: number) => {
       const path = buildLoop(area.start, km, t.seed, t.heading)
       // Longer routes get more climbs (templates are tuned for ~6 km).
       const shape = { ...t, humps: Math.max(1, Math.round((t.humps * km) / 6)) }
-      const elevations = elevationProfile(path.length, shape, req.minElevation, hi, req.avgElevation)
+      const elevations = elevationProfile(path.length, shape, lo, hi, req.avgElevation * t.band)
       return { km, path, elevations, gain: Math.round(elevationGain(elevations)) }
     }
 
-    let r = build(Math.round(req.targetDistanceKm * t.distanceFactor * 10) / 10)
+    let r = build(Math.round(targetKm * t.distanceFactor * 10) / 10)
     // Too slow for the runner's time? Shorten the route to fit.
-    if (minutesFor(r.km, r.gain) > timeBudget) {
+    if (!req.targetPaceMinPerKm && minutesFor(r.km, r.gain) > timeBudget) {
       const fitKm = Math.floor(((timeBudget - r.gain / 100) / MIN_PER_KM) * 10) / 10
       if (fitKm < 0.5) return []
       r = build(fitKm)
@@ -113,7 +116,7 @@ export function mockGenerateRoutes(req: RouteRequest): RouteResponse {
       minElevation: Math.round(Math.min(...r.elevations)),
       avgElevation: Math.round(r.elevations.reduce((a, b) => a + b, 0) / r.elevations.length),
       maxElevation: Math.round(Math.max(...r.elevations)),
-      estimatedMinutes: Math.round(minutesFor(r.km, r.gain)),
+      estimatedMinutes: Math.round(r.km * (req.targetPaceMinPerKm ?? MIN_PER_KM) + r.gain / 100),
       points: r.path.map((p, i) => ({ ...p, elevation: Math.round(r.elevations[i] * 10) / 10 })),
     }]
   })

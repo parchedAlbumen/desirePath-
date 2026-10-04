@@ -18,18 +18,22 @@ const MIN_TIME_MINUTES = 10
 const MAX_TIME_HOURS = 6
 // Faster than ~3 min/km is elite territory; flag it rather than generate impossible routes.
 const FASTEST_PACE_MIN_PER_KM = 3
+const SLOWEST_PACE_MIN_PER_KM = 20
+type GoalMode = 'distance' | 'duration'
 
 export function PlanPage() {
   const { request, findRoutes, loading } = useAppState()
   const navigate = useNavigate()
 
   const [postal, setPostal] = useState(request?.postalCode ?? '')
-  const [minE, setMinE] = useState(String(request?.minElevation ?? 260))
-  const [avgE, setAvgE] = useState(String(request?.avgElevation ?? 310))
-  const [maxE, setMaxE] = useState(String(request?.maxElevation ?? 370))
+  const [goalMode, setGoalMode] = useState<GoalMode>(request?.targetDistanceKm == null ? 'duration' : 'distance')
+  const [minE, setMinE] = useState(String(request?.minElevation ?? -50))
+  const [avgE, setAvgE] = useState(String(request?.avgElevation ?? 0))
+  const [maxE, setMaxE] = useState(String(request?.maxElevation ?? 50))
   const [distance, setDistance] = useState(String(request?.targetDistanceKm ?? 5))
-  const [hours, setHours] = useState(String(request?.targetTime.hours ?? 0))
-  const [minutes, setMinutes] = useState(String(request?.targetTime.minutes ?? 45))
+  const [hours, setHours] = useState(String(request?.targetTime?.hours ?? 0))
+  const [minutes, setMinutes] = useState(String(request?.targetTime?.minutes ?? 45))
+  const [pace, setPace] = useState(String(request?.targetPaceMinPerKm ?? 6))
   const [submitted, setSubmitted] = useState(false)
   const [generateError, setGenerateError] = useState<string | null>(null)
   const [currentLocation, setCurrentLocation] = useState<LatLng | null>(() =>
@@ -47,23 +51,27 @@ export function PlanPage() {
   const km = parseFloat(distance)
   const [h, m] = [hours, minutes].map((v) => parseInt(v, 10))
   const totalMinutes = h * 60 + m
+  const paceMinPerKm = parseFloat(pace)
+  const targetKm = goalMode === 'distance' ? km : totalMinutes / paceMinPerKm
 
   const postalError =
     useCurrentLocation || isValidPostalCode(postal) ? null : 'Enter a Canadian postal code like V5A 1S6.'
   const distanceError =
-    Number.isNaN(km) ? 'Enter how far you want to run.'
-    : km < MIN_DISTANCE_KM || km > MAX_DISTANCE_KM ? `Pick a distance between ${MIN_DISTANCE_KM} and ${MAX_DISTANCE_KM} km.`
+    goalMode === 'duration' && (!Number.isFinite(paceMinPerKm) || paceMinPerKm < FASTEST_PACE_MIN_PER_KM || paceMinPerKm > SLOWEST_PACE_MIN_PER_KM)
+      ? `Choose a pace between ${FASTEST_PACE_MIN_PER_KM} and ${SLOWEST_PACE_MIN_PER_KM} min/km.`
+    : !Number.isFinite(targetKm) ? goalMode === 'distance' ? 'Enter how far you want to run.' : 'Enter a duration and pace.'
+    : targetKm < MIN_DISTANCE_KM || targetKm > MAX_DISTANCE_KM ? `That duration and pace works out to ${targetKm.toFixed(1)} km. Choose settings between ${MIN_DISTANCE_KM} and ${MAX_DISTANCE_KM} km.`
     : null
   const timeError =
-    Number.isNaN(h) || Number.isNaN(m) ? 'Enter how long you want to run.'
+    goalMode === 'distance' ? null
+    : Number.isNaN(h) || Number.isNaN(m) ? 'Enter how long you want to run.'
     : m > 59 ? 'Minutes should be 0–59.'
     : totalMinutes < MIN_TIME_MINUTES ? `Give yourself at least ${MIN_TIME_MINUTES} minutes.`
-    : !distanceError && totalMinutes / km < FASTEST_PACE_MIN_PER_KM
-      ? `${km} km in ${totalMinutes} min is under ${FASTEST_PACE_MIN_PER_KM} min/km. Add time or shorten the distance.`
     : null
   const elevationError =
     [min, avg, max].some(Number.isNaN) ? 'Fill in all three elevations.'
-    : max > MAX_ELEVATION ? `Keep elevations under ${MAX_ELEVATION} m.`
+    : [min, avg, max].some((value) => Math.abs(value) > MAX_ELEVATION) ? `Keep elevation changes between -${MAX_ELEVATION} m and ${MAX_ELEVATION} m.`
+    : min > 0 || max < 0 ? 'A route starts at 0 m change, so minimum must be 0 or lower and maximum 0 or higher.'
     : !(min <= avg && avg <= max) ? 'Keep min ≤ average ≤ max.'
     : null
 
@@ -113,8 +121,9 @@ export function PlanPage() {
         ...(useCurrentLocation && currentLocation
           ? { startLat: currentLocation.lat, startLng: currentLocation.lng }
           : { postalCode: postal }),
-        targetDistanceKm: km,
-        targetTime: { hours: h, minutes: m },
+        ...(goalMode === 'distance'
+          ? { targetDistanceKm: km }
+          : { targetTime: { hours: h, minutes: m }, targetPaceMinPerKm: paceMinPerKm }),
         minElevation: min,
         avgElevation: avg,
         maxElevation: max,
@@ -196,49 +205,76 @@ export function PlanPage() {
         </div>
 
         <div className="plan__section-head">
-          <h2>Set your distance</h2>
+          <h2>Choose your route goal</h2>
+        </div>
+        <div className="plan__goal-toggle">
+          <span className={goalMode === 'distance' ? 'is-active' : ''}>Distance</span>
+          <button
+            type="button"
+            role="switch"
+            aria-label="Route goal"
+            aria-checked={goalMode === 'duration'}
+            onClick={() => setGoalMode((mode) => mode === 'distance' ? 'duration' : 'distance')}
+          >
+            <span />
+          </button>
+          <span className={goalMode === 'duration' ? 'is-active' : ''}>Duration + pace</span>
         </div>
 
-        <div className="chips" role="group" aria-label="Quick distance picks">
-          {DISTANCE_PRESETS.map((preset) => (
-            <button
-              key={preset}
-              type="button"
-              className={`chip${km === preset ? ' is-active' : ''}`}
-              aria-pressed={km === preset}
-              onClick={() => setDistance(String(preset))}
-            >
-              {preset} km
-            </button>
-          ))}
-        </div>
-
-        <NumberStepper
-          id="distance"
-          label="Distance"
-          value={distance}
-          onChange={setDistance}
-          step={0.5}
-          unit="km"
-          decimal
-          invalid={submitted && !!distanceError}
-        />
+        {goalMode === 'distance' ? (
+          <>
+            <div className="chips" role="group" aria-label="Quick distance picks">
+              {DISTANCE_PRESETS.map((preset) => (
+                <button
+                  key={preset}
+                  type="button"
+                  className={`chip${km === preset ? ' is-active' : ''}`}
+                  aria-pressed={km === preset}
+                  onClick={() => setDistance(String(preset))}
+                >
+                  {preset} km
+                </button>
+              ))}
+            </div>
+            <NumberStepper
+              id="distance"
+              label="Distance"
+              value={distance}
+              onChange={setDistance}
+              step={0.5}
+              unit="km"
+              decimal
+              invalid={submitted && !!distanceError}
+            />
+          </>
+        ) : (
+          <>
+            <div className="plan__section-head">
+              <h2>How long do you want to run?</h2>
+            </div>
+            <div className={`time-picker${submitted && timeError ? ' is-invalid' : ''}`} role="group" aria-label="Duration">
+              <WheelPicker label="Hours" unit="hours" min={0} max={MAX_TIME_HOURS} value={h} onChange={(v) => setHours(String(v))} />
+              <WheelPicker label="Minutes" unit="min" min={0} max={59} value={m} onChange={(v) => setMinutes(String(v))} />
+            </div>
+            <NumberStepper
+              id="pace"
+              label="Target pace"
+              value={pace}
+              onChange={setPace}
+              step={0.1}
+              unit="min/km"
+              decimal
+              invalid={submitted && !!distanceError}
+            />
+            <p className="field__hint">Estimated route distance: {Number.isFinite(targetKm) ? targetKm.toFixed(1) : '—'} km</p>
+          </>
+        )}
 
         {submitted && distanceError && (
           <p className="field__hint is-error" role="alert">
             {distanceError}
           </p>
         )}
-
-        <div className="plan__section-head">
-          <h2>Set your time</h2>
-        </div>
-
-        {/* iPhone Clock-style: hours and minutes side by side, scroll or flick to change */}
-        <div className={`time-picker${submitted && timeError ? ' is-invalid' : ''}`} role="group" aria-label="Time">
-          <WheelPicker label="Hours" unit="hours" min={0} max={MAX_TIME_HOURS} value={h} onChange={(v) => setHours(String(v))} />
-          <WheelPicker label="Minutes" unit="min" min={0} max={59} value={m} onChange={(v) => setMinutes(String(v))} />
-        </div>
 
         {submitted && timeError && (
           <p className="field__hint is-error" role="alert">
@@ -248,12 +284,12 @@ export function PlanPage() {
 
         <div className="plan__section-head">
           <h2>Set your elevation</h2>
-          <span>Meters above sea level</span>
+          <span>Meters relative to start</span>
         </div>
 
-        <NumberStepper id="min" label="Min Elevation" value={minE} onChange={setMinE} invalid={submitted && !!elevationError} />
-        <NumberStepper id="avg" label="Average Elevation" value={avgE} onChange={setAvgE} invalid={submitted && !!elevationError} />
-        <NumberStepper id="max" label="Max Elevation" value={maxE} onChange={setMaxE} invalid={submitted && !!elevationError} />
+        <NumberStepper id="min" label="Min Elevation" value={minE} onChange={setMinE} allowNegative invalid={submitted && !!elevationError} />
+        <NumberStepper id="avg" label="Average Elevation" value={avgE} onChange={setAvgE} allowNegative invalid={submitted && !!elevationError} />
+        <NumberStepper id="max" label="Max Elevation" value={maxE} onChange={setMaxE} allowNegative invalid={submitted && !!elevationError} />
 
         {submitted && elevationError && (
           <p className="field__hint is-error" role="alert">

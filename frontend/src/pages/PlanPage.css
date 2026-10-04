@@ -19,6 +19,67 @@
   color: var(--muted);
 }
 
+.plan__goal-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 52px;
+  margin-bottom: 18px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.plan__goal-toggle > span {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.plan__goal-toggle > span.is-active {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.plan__goal-toggle button {
+  position: relative;
+  width: 48px;
+  height: 28px;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--border);
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.plan__goal-toggle button[aria-checked='true'] {
+  background: var(--secondary);
+}
+
+.plan__goal-toggle button span {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 20%);
+  transition: transform 0.15s;
+}
+
+.plan__goal-toggle button[aria-checked='true'] span {
+  transform: translateX(20px);
+}
+
+.plan__goal-toggle button:focus-visible {
+  outline: 3px solid var(--secondary);
+  outline-offset: 3px;
+}
+
 /* Two wheels side by side, sharing one highlight band across the middle row */
 .time-picker {
   position: relative;
