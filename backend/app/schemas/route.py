@@ -23,7 +23,6 @@ class RouteBase(BaseModel):
 
 
 class RouteCreate(RouteBase):
-    user_id: int  # TODO: take from the logged-in user once auth exists
     points: list[RoutePoint] = []  # in order along the route
 
 

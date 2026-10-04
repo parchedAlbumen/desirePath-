@@ -122,6 +122,24 @@
   color: #5f6662;
 }
 
+.auth__input.is-invalid {
+  border-color: var(--hard);
+}
+
+.auth__hint {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.auth__hint--ok {
+  color: var(--lime);
+}
+
+.auth__hint--error {
+  color: var(--hard);
+}
+
 .auth__feedback {
   margin: 0 0 16px;
   font-size: 14px;
