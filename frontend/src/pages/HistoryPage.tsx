@@ -9,7 +9,7 @@ import { formatDuration, formatKm, formatRunDate } from '../utils/format.ts'
 import './HistoryPage.css'
 
 export function HistoryPage() {
-  const { history, favorites: savedFavorites, syncError, toggleFavorite: setFavorite, startRun } = useAppState()
+  const { history, favorites: savedFavorites, signedIn, syncError, toggleFavorite: setFavorite, startRun } = useAppState()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [newestFirst, setNewestFirst] = useState(true)
@@ -33,6 +33,10 @@ export function HistoryPage() {
   const totalGain = history.reduce((sum, run) => sum + run.elevationGain, 0)
 
   const toggleFavorite = async (run: RunRecord) => {
+    if (!signedIn) {
+      setMessage('Sign in to star runs and keep them.')
+      return
+    }
     try {
       const added = await setFavorite(run)
       setMessage(added ? `${run.routeName} added to favorites.` : `${run.routeName} removed from favorites.`)
@@ -92,7 +96,15 @@ export function HistoryPage() {
           ) : (
             <div className="card history__favorites-empty">
               <Star aria-hidden="true" />
-              <p>Star a run to keep it saved here for your next outing.</p>
+              <p>
+                {signedIn ? (
+                  'Star a run to keep it saved here for your next outing.'
+                ) : (
+                  <>
+                    <Link to="/login">Sign in</Link> to star runs and keep them for your next outing.
+                  </>
+                )}
+              </p>
             </div>
           )}
         </section>
@@ -108,6 +120,12 @@ export function HistoryPage() {
         )}
       </div>
 
+      {!signedIn && !sharedRun && (
+        <p className="history__message" role="note">
+          You're not signed in, so these runs disappear when you close this tab. <Link to="/login">Sign in</Link> to
+          keep them.
+        </p>
+      )}
       {syncError && <p className="history__message" role="alert">{syncError}</p>}
       {invalidShare && <p className="history__message" role="alert">This shared route link is invalid or incomplete.</p>}
       {sharedRun ? (

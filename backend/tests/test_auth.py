@@ -71,3 +71,38 @@ def test_delete_account_needs_valid_token():
     with TestClient(app) as client:
         assert client.delete("/api/auth/me").status_code == 401
         assert client.delete("/api/auth/me", headers={"Authorization": "Bearer garbage"}).status_code == 401
+
+
+def test_change_password(email):
+    new = "brandnewpass1"
+    with TestClient(app) as client:
+        token = client.post("/api/auth/register", json={"email": email, "password": PASSWORD}).json()["access_token"]
+        h = {"Authorization": f"Bearer {token}"}
+
+        assert client.patch("/api/auth/password", json={"current_password": PASSWORD, "new_password": new}, headers=h).status_code == 204
+        assert client.post("/api/auth/login", json={"email": email, "password": PASSWORD}).status_code == 401  # old one is dead
+        assert client.post("/api/auth/login", json={"email": email, "password": new}).status_code == 200
+        with get_connection() as conn:  # stored hashed, like at sign-up
+            stored = conn.execute("SELECT password_hash FROM users WHERE email = %s", (email,)).fetchone()[0]
+        assert stored != new and stored.startswith("$2b$")
+
+
+def test_change_password_rejects_bad_requests(email):
+    with TestClient(app) as client:
+        token = client.post("/api/auth/register", json={"email": email, "password": PASSWORD}).json()["access_token"]
+        h = {"Authorization": f"Bearer {token}"}
+
+        wrong = client.patch("/api/auth/password", json={"current_password": "nope12345", "new_password": "brandnewpass1"}, headers=h)
+        assert wrong.status_code == 400 and "Current password is wrong" in wrong.text
+        short = client.patch("/api/auth/password", json={"current_password": PASSWORD, "new_password": "short"}, headers=h)
+        assert short.status_code == 422
+        assert client.patch("/api/auth/password", json={"current_password": PASSWORD}, headers=h).status_code == 422
+        # nothing changed: the original password still works
+        assert client.post("/api/auth/login", json={"email": email, "password": PASSWORD}).status_code == 200
+
+
+def test_change_password_needs_valid_token():
+    body = {"current_password": PASSWORD, "new_password": "brandnewpass1"}
+    with TestClient(app) as client:
+        assert client.patch("/api/auth/password", json=body).status_code == 401
+        assert client.patch("/api/auth/password", json=body, headers={"Authorization": "Bearer garbage"}).status_code == 401

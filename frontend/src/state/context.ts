@@ -36,7 +36,9 @@ export interface AppState {
 
   /** The most recent runs (what the history list shows). */
   history: RunRecord[]
-  /** Starred runs. Signed in: stored on the backend. Signed out: browser storage. */
+  /** True when signed in. Signed-out runs last only for this tab and can't be starred. */
+  signedIn: boolean
+  /** Starred runs, stored on the backend (always empty when signed out). */
   favorites: RunRecord[]
   /** Set when saving or loading runs on the backend failed; null once something succeeds. */
   syncError: string | null

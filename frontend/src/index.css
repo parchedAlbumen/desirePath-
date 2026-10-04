@@ -213,6 +213,8 @@ a {
   color: var(--text);
   font-size: 13px;
   font-weight: 600;
+  white-space: nowrap;
+  flex: none;
   cursor: pointer;
   transition: border-color 0.15s, background-color 0.15s, color 0.15s;
 }
