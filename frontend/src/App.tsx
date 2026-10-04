@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { BottomNav } from './components/BottomNav.tsx'
 import { AuthPage } from './pages/AuthPage.tsx'
+import { AUTH_TOKEN_KEY } from './services/auth.ts'
 import { HistoryPage } from './pages/HistoryPage.tsx'
 import { PlanPage } from './pages/PlanPage.tsx'
 import { RoutesPage } from './pages/RoutesPage.tsx'
@@ -30,6 +31,7 @@ function App() {
   const onLogout = () => {
     sessionStorage.removeItem(AUTH_SESSION_KEY)
     sessionStorage.removeItem(AUTH_EMAIL_KEY)
+    sessionStorage.removeItem(AUTH_TOKEN_KEY)
     setIsAuthenticated(false)
     navigate('/')
   }
