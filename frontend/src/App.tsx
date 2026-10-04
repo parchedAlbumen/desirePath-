@@ -1,5 +1,5 @@
-import { LogOut } from 'lucide-react'
-import { useState } from 'react'
+import { CircleCheck, LogOut } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { BottomNav } from './components/BottomNav.tsx'
 import { AuthPage } from './pages/AuthPage.tsx'
@@ -12,6 +12,7 @@ import { AppStateProvider } from './state/AppStateProvider.tsx'
 
 const AUTH_SESSION_KEY = 'desirepath-authenticated'
 const AUTH_EMAIL_KEY = 'desirepath-user-email'
+const WELCOME_TOAST_MS = 3500
 
 function App() {
   const { pathname } = useLocation()
@@ -21,11 +22,21 @@ function App() {
     () => sessionStorage.getItem(AUTH_SESSION_KEY) === 'true',
   )
   const accountEmail = isAuthenticated ? sessionStorage.getItem(AUTH_EMAIL_KEY) : null
+  // One-off message shown as a toast right after signing in or up.
+  const [welcome, setWelcome] = useState<string | null>(null)
 
-  const onAuthenticated = (email: string) => {
+  useEffect(() => {
+    if (!welcome) return
+    const id = setTimeout(() => setWelcome(null), WELCOME_TOAST_MS)
+    return () => clearTimeout(id)
+  }, [welcome])
+
+  // Flipping isAuthenticated is enough to leave the login page: its route redirects home when signed in.
+  const onAuthenticated = (email: string, message: string) => {
     sessionStorage.setItem(AUTH_SESSION_KEY, 'true')
     sessionStorage.setItem(AUTH_EMAIL_KEY, email.trim().toLowerCase())
     setIsAuthenticated(true)
+    setWelcome(message)
   }
 
   const onLogout = () => {
@@ -39,12 +50,26 @@ function App() {
   return (
     <AppStateProvider key={accountEmail ?? 'anonymous'} userEmail={accountEmail}>
       <div className="app">
-        <header className="account-bar">
+        <header className={`account-bar${isAuthenticated ? ' account-bar--signed-in' : ''}`}>
           {isAuthenticated ? (
-            <button type="button" className="account-bar__button" onClick={onLogout}>
-              <LogOut aria-hidden="true" />
-              Log out
-            </button>
+            <>
+              <div className="account-chip" title={accountEmail ?? undefined}>
+                <span className="account-chip__avatar" aria-hidden="true">
+                  {(accountEmail?.[0] ?? '?').toUpperCase()}
+                </span>
+                <span className="account-chip__text">
+                  <span className="account-chip__status">
+                    <i aria-hidden="true" />
+                    Signed in
+                  </span>
+                  <span className="account-chip__email">{accountEmail}</span>
+                </span>
+              </div>
+              <button type="button" className="account-bar__button" onClick={onLogout}>
+                <LogOut aria-hidden="true" />
+                Log out
+              </button>
+            </>
           ) : isAuthPage ? (
             <Link className="account-bar__button" to={pathname === '/login' ? '/signup' : '/login'}>
               {pathname === '/login' ? 'Create account' : 'Sign in'}
@@ -60,9 +85,23 @@ function App() {
             </div>
           )}
         </header>
+        {welcome && (
+          <p className="toast" role="status">
+            <CircleCheck aria-hidden="true" />
+            {welcome}
+          </p>
+        )}
         <Routes>
-          <Route path="/login" element={<AuthPage onAuthenticated={onAuthenticated} />} />
-          <Route path="/signup" element={<AuthPage onAuthenticated={onAuthenticated} />} />
+          {/* Signed in (just now, or already)? The login and sign-up pages send you home.
+              replace: Back won't return to the form. */}
+          <Route
+            path="/login"
+            element={isAuthenticated ? <Navigate to="/" replace /> : <AuthPage onAuthenticated={onAuthenticated} />}
+          />
+          <Route
+            path="/signup"
+            element={isAuthenticated ? <Navigate to="/" replace /> : <AuthPage onAuthenticated={onAuthenticated} />}
+          />
           <Route path="/" element={<PlanPage />} />
           <Route path="/routes" element={<RoutesPage />} />
           <Route path="/run" element={<RunPage />} />
