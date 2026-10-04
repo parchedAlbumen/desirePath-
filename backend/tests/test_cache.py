@@ -54,6 +54,7 @@ def test_far_away_postal_code_or_different_settings_miss(ors_calls):
     post(postalCode="V6B 1A1")
     assert len(ors_calls) > n
     n = len(ors_calls)
+    generate_limiter.reset()  # 3 uncached generates in a row would pass the guest limit; that's not what this tests
     post(maxElevation=400)
     assert len(ors_calls) > n
 

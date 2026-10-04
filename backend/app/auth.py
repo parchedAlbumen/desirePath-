@@ -36,3 +36,14 @@ def get_current_user_id(creds: HTTPAuthorizationCredentials | None = Depends(_be
     except jwt.PyJWTError:
         raise HTTPException(401, "Invalid or expired token")
     return int(payload["sub"])
+
+
+def get_optional_user_id(creds: HTTPAuthorizationCredentials | None = Depends(_bearer)) -> int | None:
+    """Like get_current_user_id, but for endpoints that also work logged out: no token or a bad one gives None."""
+    if creds is None:
+        return None
+    try:
+        payload = jwt.decode(creds.credentials, JWT_SECRET, algorithms=[ALGORITHM])
+    except jwt.PyJWTError:
+        return None
+    return int(payload["sub"])
