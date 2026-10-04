@@ -92,3 +92,22 @@ export async function setRunFavorite(id: string, isFavorite: boolean): Promise<R
 export async function deleteRun(id: string): Promise<void> {
   await request<void>(`/${id}`, { method: 'DELETE' })
 }
+
+/** Totals and personal bests over all of this account's runs (GET /api/runs/stats). */
+export interface RunStats {
+  runCount: number
+  totalDistanceKm: number
+  totalDurationSec: number
+  totalElevationGain: number
+  /** Total time ÷ total distance; null until there's a run long enough to time. */
+  avgPaceSecPerKm: number | null
+  longestRunKm: number
+  fastestPaceSecPerKm: number | null
+  biggestClimb: number
+  /** The last 7 days (not since Monday). */
+  thisWeek: { runCount: number; distanceKm: number }
+}
+
+export async function fetchRunStats(): Promise<RunStats> {
+  return request<RunStats>('/stats')
+}

@@ -695,7 +695,7 @@ a {
   bottom: 0;
   z-index: 10;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr); /* one column per tab */
   width: 100%;
   max-width: var(--app-width);
   height: calc(var(--nav-height) + env(safe-area-inset-bottom));

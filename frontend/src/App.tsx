@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { AccountMenu } from './components/AccountMenu.tsx'
 import { BottomNav } from './components/BottomNav.tsx'
+import { AnalyticsPage } from './pages/AnalyticsPage.tsx'
 import { AuthPage } from './pages/AuthPage.tsx'
 import { AUTH_TOKEN_KEY } from './services/auth.ts'
 import { ChangePasswordPage } from './pages/ChangePasswordPage.tsx'
@@ -20,6 +21,7 @@ const WELCOME_TOAST_MS = 3500
 function pageTitle(pathname: string): string {
   if (pathname.startsWith('/run')) return 'Run'
   if (pathname.startsWith('/history')) return 'History'
+  if (pathname.startsWith('/stats')) return 'Stats'
   return 'Desire Path'
 }
 
@@ -119,6 +121,7 @@ function App() {
           <Route path="/routes" element={<RoutesPage />} />
           <Route path="/run" element={<RunPage />} />
           <Route path="/history" element={<HistoryPage />} />
+          <Route path="/stats" element={<AnalyticsPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         {!isAuthPage && <BottomNav />}
