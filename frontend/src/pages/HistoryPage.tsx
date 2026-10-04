@@ -4,7 +4,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { RouteMap } from '../components/RouteMap.tsx'
 import { useAppState } from '../hooks/useAppState.ts'
 import type { GeneratedRoute, LatLng, RunRecord } from '../types/route.ts'
-import { LIME } from '../utils/difficulty.ts'
+import { PRIMARY } from '../utils/difficulty.ts'
 import { formatDuration, formatKm, formatRunDate } from '../utils/format.ts'
 import './HistoryPage.css'
 
@@ -164,7 +164,7 @@ function RunItem({
 }) {
   const svgRef = useRef<SVGSVGElement>(null)
   const points = run.plannedRoute?.points ?? run.points
-  const mapRoutes = useMemo(() => [{ id: run.id, points, color: LIME, selected: true }], [run.id, points])
+  const mapRoutes = useMemo(() => [{ id: run.id, points, color: PRIMARY, selected: true }], [run.id, points])
 
   return (
     <li className={`run-item card${selected ? ' is-selected' : ''}`}>
@@ -330,13 +330,13 @@ async function downloadRunImage(run: RunRecord, svg: SVGSVGElement | null, setMe
     const context = canvas.getContext('2d')
     if (!context) throw new Error('Canvas is unavailable')
 
-    context.fillStyle = '#171c18'
+    context.fillStyle = '#172554'
     context.fillRect(0, 0, canvas.width, canvas.height)
     context.drawImage(image, 48, 48, 560, 534)
-    context.fillStyle = '#f3f5f4'
+    context.fillStyle = '#ffffff'
     context.font = '600 46px sans-serif'
     context.fillText(run.routeName, 660, 205, 490)
-    context.fillStyle = '#aab2ab'
+    context.fillStyle = '#c7d2fe'
     context.font = '28px sans-serif'
     context.fillText(`${formatKm(run.distanceKm)} km · ${formatDuration(run.durationSec)}`, 660, 265)
     context.fillText(`${run.elevationGain} m elevation · DesirePath`, 660, 315)

@@ -1,5 +1,5 @@
 import { useId } from 'react'
-import { LIME } from '../utils/difficulty.ts'
+import { PRIMARY } from '../utils/difficulty.ts'
 import { smoothPath, type Pt } from '../utils/svgPath.ts'
 import './ElevationChart.css'
 
@@ -75,13 +75,13 @@ export function ElevationProfile({ values, progress, currentKm, totalKm, planned
         <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" aria-hidden="true">
           <defs>
             <linearGradient id={gradientId} x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0" stopColor="#ffffff" stopOpacity="0.1" />
-              <stop offset="1" stopColor="#ffffff" stopOpacity="0.02" />
+              <stop offset="0" stopColor="#0f172a" stopOpacity="0.08" />
+              <stop offset="1" stopColor="#0f172a" stopOpacity="0.01" />
             </linearGradient>
           </defs>
           <path d={`${line} L${w},${h} L0,${h} Z`} fill={`url(#${gradientId})`} />
-          <path d={line} fill="none" stroke="#5d6561" strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
-          <line x1={x} x2={x} y1={0} y2={y} stroke={LIME} strokeWidth={2} vectorEffect="non-scaling-stroke" />
+          <path d={line} fill="none" stroke="#94a3b8" strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
+          <line x1={x} x2={x} y1={0} y2={y} stroke={PRIMARY} strokeWidth={2} vectorEffect="non-scaling-stroke" />
         </svg>
         <span className="profile__dot" style={{ left: `${progress * 100}%`, top: `${(y / h) * 100}%` }} />
       </div>

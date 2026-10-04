@@ -1,18 +1,29 @@
 /* Design tokens (from the Figma mockups). The app is dark-only by design. */
 :root {
-  --bg: #0b0d0c;
-  --surface: #161918;
-  --surface-2: #1d211f;
-  --border: #2b302d;
-  --text: #f3f5f4;
-  --muted: #8f9692;
-  --lime: #c8f250;
-  --lime-ink: #11160a;
-  --lime-soft: rgba(200, 242, 80, 0.14);
-  --easy: #a6dd4c;
-  --medium: #f3c35c;
-  --hard: #e07a6b;
-  --map-ground: #1f2c24;
+  /* Light theme: navy primary, warm orange secondary, light blue accent */
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --surface-2: #eef2f7;
+  --border: #e2e8f0;
+  --text: #0f172a;
+  --muted: #64748b;
+  --placeholder: #94a3b8;
+
+  --primary: #172554; /* deep navy: buttons, logo, selected states */
+  --primary-ink: #ffffff; /* text on primary */
+  --primary-soft: rgba(23, 37, 84, 0.08);
+  --primary-tint: #f1f4fa; /* solid soft navy, e.g. selected card */
+
+  --secondary: #f4a261; /* warm orange: highlights (nav underline, active chip, running pill) */
+  --secondary-ink: #9a4b12; /* readable orange for text on light backgrounds */
+  --secondary-soft: rgba(244, 162, 97, 0.18);
+
+  --accent: #38bdf8; /* light blue: small details (GPS dot, focus rings) */
+
+  --easy: #16a34a;
+  --medium: #ca8a04;
+  --hard: #dc2626;
+  --map-ground: #e9eef5;
 
   --radius: 14px;
   --radius-lg: 20px;
@@ -25,7 +36,7 @@
   line-height: 1.4;
   color: var(--text);
   background: var(--bg);
-  color-scheme: dark;
+  color-scheme: light;
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
 }
@@ -54,7 +65,7 @@ a {
 }
 
 :focus-visible {
-  outline: 2px solid var(--lime);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -99,8 +110,8 @@ a {
   height: 28px;
   place-items: center;
   border-radius: 8px;
-  background: var(--lime);
-  color: var(--lime-ink);
+  background: var(--primary);
+  color: var(--primary-ink);
 }
 
 .account-bar__mark svg {
@@ -124,8 +135,8 @@ a {
   height: 34px;
   place-items: center;
   border-radius: 50%;
-  background: var(--lime);
-  color: var(--lime-ink);
+  background: var(--primary);
+  color: var(--primary-ink);
   font-size: 15px;
   font-weight: 700;
   cursor: default;
@@ -155,10 +166,10 @@ a {
   gap: 10px;
   margin: 0;
   padding: 12px 18px;
-  border: 1px solid var(--lime);
+  border: 1px solid var(--primary);
   border-radius: 999px;
-  background: #1a1e17;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  background: var(--surface);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
   font-size: 14px;
   font-weight: 500;
   color: var(--text);
@@ -170,7 +181,7 @@ a {
   flex: none;
   width: 18px;
   height: 18px;
-  color: var(--lime);
+  color: var(--primary);
 }
 
 @keyframes toast-in {
@@ -205,19 +216,19 @@ a {
 }
 
 .account-bar__button:hover {
-  border-color: var(--lime);
-  color: var(--lime);
+  border-color: var(--primary);
+  color: var(--primary);
 }
 
 .account-bar__button--primary {
-  border-color: var(--lime);
-  background: var(--lime);
-  color: var(--lime-ink);
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--primary-ink);
 }
 
 .account-bar__button--primary:hover {
-  background: var(--lime);
-  color: var(--lime-ink);
+  background: var(--primary);
+  color: var(--primary-ink);
   filter: brightness(1.05);
 }
 
@@ -262,7 +273,7 @@ a {
   font-weight: 600;
   letter-spacing: 0.03em;
   text-transform: uppercase;
-  color: var(--lime);
+  color: var(--primary);
 }
 
 /* ---------- Logo ---------- */
@@ -279,8 +290,8 @@ a {
   width: 60px;
   height: 60px;
   border-radius: 16px;
-  background: var(--lime);
-  color: var(--lime-ink);
+  background: var(--primary);
+  color: var(--primary-ink);
 }
 
 .logo__mark svg {
@@ -329,8 +340,8 @@ a {
 }
 
 .btn--primary {
-  background: var(--lime);
-  color: var(--lime-ink);
+  background: var(--primary);
+  color: var(--primary-ink);
 }
 
 .btn--primary:hover:not(:disabled) {
@@ -343,7 +354,7 @@ a {
 }
 
 .btn--secondary:hover {
-  background: #252a27;
+  background: var(--border);
 }
 
 .btn--block {
@@ -419,17 +430,17 @@ a {
 }
 
 .badge--easy {
-  background: rgba(166, 221, 76, 0.14);
+  background: rgba(22, 163, 74, 0.1);
   color: var(--easy);
 }
 
 .badge--medium {
-  background: rgba(243, 195, 92, 0.14);
+  background: rgba(202, 138, 4, 0.12);
   color: var(--medium);
 }
 
 .badge--hard {
-  background: rgba(224, 122, 107, 0.14);
+  background: rgba(220, 38, 38, 0.1);
   color: var(--hard);
 }
 
@@ -506,7 +517,7 @@ a {
 
 .input-shell:focus-within,
 .stepper:focus-within {
-  border-color: var(--lime);
+  border-color: var(--primary);
 }
 
 .input-shell.is-invalid,
@@ -518,7 +529,7 @@ a {
   flex: none;
   width: 24px;
   height: 24px;
-  color: var(--lime);
+  color: var(--primary);
 }
 
 .input-shell input {
@@ -533,7 +544,7 @@ a {
 }
 
 .input-shell input::placeholder {
-  color: #5f6662;
+  color: var(--placeholder);
 }
 
 .input-shell__suffix {
@@ -605,7 +616,7 @@ a {
   height: calc(var(--nav-height) + env(safe-area-inset-bottom));
   padding-bottom: env(safe-area-inset-bottom);
   border-top: 1px solid var(--border);
-  background: rgba(11, 13, 12, 0.96);
+  background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(12px);
   transform: translateX(-50%);
 }
@@ -625,7 +636,7 @@ a {
 
 .bottom-nav__tab.is-active {
   font-weight: 700;
-  color: var(--lime);
+  color: var(--primary);
 }
 
 /* Sliding underline: one column wide, moved along by --tab; the visible bar is centred inside it */
@@ -647,7 +658,7 @@ a {
   width: 22px;
   height: 100%;
   border-radius: 2px;
-  background: var(--lime);
+  background: var(--secondary);
   transform: translateX(-50%);
 }
 
@@ -674,7 +685,7 @@ a {
   height: 8px;
   border: 2px solid var(--bg);
   border-radius: 50%;
-  background: var(--lime);
+  background: var(--primary);
 }
 
 @media (prefers-reduced-motion: reduce) {

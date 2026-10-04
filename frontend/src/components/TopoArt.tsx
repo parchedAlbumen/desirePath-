@@ -1,4 +1,4 @@
-import { LIME } from '../utils/difficulty.ts'
+import { PRIMARY } from '../utils/difficulty.ts'
 import { blobRing, smoothPath } from '../utils/svgPath.ts'
 
 const W = 220
@@ -29,12 +29,12 @@ const loop = smoothPath(
 export function TopoArt() {
   return (
     <svg className="topo-art" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-      <rect width={W} height={H} fill="#1d2a22" />
+      <rect width={W} height={H} fill="#e9eef5" />
       {contours.map((d, i) => (
-        <path key={i} d={d} fill="none" stroke="rgba(255,255,255,0.09)" strokeWidth={1} />
+        <path key={i} d={d} fill="none" stroke="rgba(15,23,42,0.1)" strokeWidth={1} />
       ))}
-      <path d={road} fill="none" stroke="#56635c" strokeWidth={6} strokeLinecap="round" opacity={0.7} />
-      <path d={loop} fill="none" stroke={LIME} strokeWidth={3} strokeLinejoin="round" />
+      <path d={road} fill="none" stroke="#cbd5e1" strokeWidth={6} strokeLinecap="round" />
+      <path d={loop} fill="none" stroke={PRIMARY} strokeWidth={3} strokeLinejoin="round" />
     </svg>
   )
 }

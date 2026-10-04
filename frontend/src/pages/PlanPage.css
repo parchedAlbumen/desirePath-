@@ -76,9 +76,9 @@
 }
 
 .chip.is-active {
-  border-color: var(--lime);
-  background: var(--lime-soft);
-  color: var(--lime);
+  border-color: var(--secondary);
+  background: var(--secondary-soft);
+  color: var(--secondary-ink);
   font-weight: 600;
 }
 

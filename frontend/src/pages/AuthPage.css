@@ -46,7 +46,7 @@
 
 .auth__back:hover,
 .auth__switch a:hover {
-  color: var(--lime);
+  color: var(--primary);
 }
 
 .auth__back svg {
@@ -98,7 +98,7 @@
 }
 
 .auth__input:focus-within {
-  border-color: var(--lime);
+  border-color: var(--primary);
 }
 
 .auth__input svg {
@@ -119,7 +119,7 @@
 }
 
 .auth__input input::placeholder {
-  color: #5f6662;
+  color: var(--placeholder);
 }
 
 .auth__input.is-invalid {
@@ -133,7 +133,7 @@
 }
 
 .auth__hint--ok {
-  color: var(--lime);
+  color: var(--primary);
 }
 
 .auth__hint--error {
@@ -150,7 +150,7 @@
 }
 
 .auth__feedback--success {
-  color: var(--lime);
+  color: var(--primary);
 }
 
 .auth__submit {
