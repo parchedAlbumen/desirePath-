@@ -196,6 +196,17 @@ def test_all_runs_are_kept(emails):
         assert _ids(client, h) == [r["id"] for r in reversed(others)] + [starred["id"]]
 
 
+def test_every_run_has_a_calorie_range(emails):
+    with TestClient(app) as client:
+        h = _login(client, emails)
+        created = client.post("/api/runs", json=_run(distanceKm=5, elevationGain=120), headers=h).json()
+        assert created["estimatedCalories"] == {"min": 340, "max": 500}
+        assert client.get(f"/api/runs/{created['id']}", headers=h).json()["estimatedCalories"] == {"min": 340, "max": 500}
+        assert client.get("/api/runs", headers=h).json()[0]["estimatedCalories"] == {"min": 340, "max": 500}
+        # it's in the response only, not something the client sends or the stats total up
+        assert "estimatedCalories" not in client.get("/api/runs/stats", headers=h).json()
+
+
 def test_stats_with_no_runs(emails):
     with TestClient(app) as client:
         stats = client.get("/api/runs/stats", headers=_login(client, emails))
