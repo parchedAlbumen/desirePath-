@@ -4,3 +4,5 @@ python-dotenv
 psycopg[binary,pool]
 pytest
 httpx
+bcrypt
+pyjwt
