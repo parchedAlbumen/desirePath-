@@ -2,8 +2,10 @@
 import re
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, computed_field, model_validator
 from pydantic.alias_generators import to_camel
+
+from app.services.calories import estimate_kcal_range
 
 POSTAL_RE = re.compile(r"^[ABCEGHJ-NPRSTVXY]\d[ABCEGHJ-NPRSTV-Z] ?\d[ABCEGHJ-NPRSTV-Z]\d$", re.IGNORECASE)
 
@@ -70,6 +72,17 @@ class RouteArea(CamelModel):
     start: LatLng
 
 
+class CalorieRange(CamelModel):
+    """Estimated kcal for a lighter (min) and heavier (max) runner; see app/services/calories.py."""
+    min: int
+    max: int
+
+    @classmethod
+    def estimate(cls, distance_km: float, elevation_gain_m: float) -> "CalorieRange":
+        low, high = estimate_kcal_range(distance_km, elevation_gain_m)
+        return cls(min=low, max=high)
+
+
 class GeneratedRoute(CamelModel):
     id: str
     name: str
@@ -82,6 +95,11 @@ class GeneratedRoute(CamelModel):
     max_elevation: int
     estimated_minutes: int
     points: list[RoutePoint]
+
+    @computed_field
+    @property
+    def estimated_calories(self) -> CalorieRange:
+        return CalorieRange.estimate(self.distance_km, self.elevation_gain)
 
 
 class RouteResponse(CamelModel):

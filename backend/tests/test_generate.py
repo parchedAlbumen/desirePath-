@@ -4,6 +4,7 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from app.services import geocode, ors
+from app.services.calories import estimate_kcal_range
 
 client = TestClient(app)  # no `with`: skips the DB pool, generate doesn't need it
 
@@ -41,7 +42,7 @@ def test_generate_matches_agreed_shape(fake_ors):
 
     route = data["routes"][0]
     assert set(route) == {"id", "name", "difficulty", "terrain", "distanceKm", "elevationGain", "minElevation",
-                          "avgElevation", "maxElevation", "estimatedMinutes", "points"}
+                          "avgElevation", "maxElevation", "estimatedMinutes", "estimatedCalories", "points"}
     assert set(route["points"][0]) == {"lat", "lng", "elevation"}
     assert len(route["points"]) <= 121
 
@@ -150,3 +151,9 @@ def test_validation_failures_are_logged_without_values(caplog):
     logged = " ".join(rec.getMessage() for rec in caplog.records)
     assert "422 on POST /api/routes/generate" in logged and "postalCode" in logged
     assert "SECRET-12345" not in logged
+
+
+def test_routes_have_a_calorie_range_from_their_distance_and_climb(fake_ors):
+    for r in client.post("/api/routes/generate", json=BODY).json()["routes"]:
+        low, high = estimate_kcal_range(r["distanceKm"], r["elevationGain"])
+        assert r["estimatedCalories"] == {"min": low, "max": high} and 0 < low < high

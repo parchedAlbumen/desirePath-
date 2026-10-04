@@ -1,7 +1,9 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validator
 from pydantic.alias_generators import to_camel
+
+from app.schemas.generate import CalorieRange
 
 
 class _CamelModel(BaseModel):
@@ -39,6 +41,12 @@ class RunUpdate(_CamelModel):
 
 class Run(RunCreate):
     id: int
+
+    @computed_field
+    @property
+    def estimated_calories(self) -> CalorieRange:
+        """Worked out from the recorded distance and climb when read, so older runs get it too."""
+        return CalorieRange.estimate(self.distance_km, self.elevation_gain)
 
 
 class WeekStats(_CamelModel):
