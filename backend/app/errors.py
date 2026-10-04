@@ -2,6 +2,8 @@
 import logging
 
 from fastapi import FastAPI, Request
+from fastapi.exception_handlers import request_validation_exception_handler
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app.ratelimit import RateLimited
@@ -15,6 +17,13 @@ def _json(status: int, detail: str, headers: dict | None = None) -> JSONResponse
 
 
 def register(app: FastAPI) -> None:
+    @app.exception_handler(RequestValidationError)
+    async def _validation(request: Request, exc: RequestValidationError):
+        # Log which fields failed and why (never the submitted values, which can include passwords).
+        problems = [f"{'.'.join(str(p) for p in e['loc'])}: {e['msg']}" for e in exc.errors()]
+        log.info("422 on %s %s: %s", request.method, request.url.path, "; ".join(problems))
+        return await request_validation_exception_handler(request, exc)
+
     @app.exception_handler(RateLimited)
     async def _rate_limited(request: Request, exc: RateLimited):
         who = "You're" if exc.scope == "ip" else "Everyone's"

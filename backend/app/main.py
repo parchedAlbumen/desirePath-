@@ -1,15 +1,29 @@
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app import errors
+from app import config, errors
 from app.db import close_pool, get_connection, open_pool
 from app.routers import auth, generate, routes
 
 
+# Show our own log lines (rate limits, ORS failures, validation errors) in the uvicorn terminal.
+logging.basicConfig(level=logging.INFO, format="%(levelname)s [%(name)s] %(message)s")
+log = logging.getLogger("app")
+
+
+def _warn_about_missing_config() -> None:
+    """Names only, never values. A missing value here is the usual cause of confusing 5xx errors."""
+    for name in ("DATABASE_URL", "ORS_API_KEY", "JWT_SECRET"):
+        if not getattr(config, name):
+            log.warning("%s is not set in backend/.env", name)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    _warn_about_missing_config()
     open_pool()
     yield
     close_pool()

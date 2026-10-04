@@ -1,3 +1,5 @@
+import { errorFromNetwork, errorFromResponse } from './httpError.ts'
+
 export interface Credentials {
   email: string
   password: string
@@ -14,21 +16,23 @@ const ENDPOINTS: Record<AuthMode, string> = {
 }
 
 export async function submitCredentials(mode: AuthMode, credentials: Credentials): Promise<void> {
-  const response = await fetch(ENDPOINTS[mode], {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(credentials),
-  })
-
-  const body = await response.json().catch(() => null)
-
-  if (!response.ok) {
-    // FastAPI puts a string in "detail" for 401/409, and a list of field errors for 422
-    const detail = body?.detail
-    const message = typeof detail === 'string' ? detail : Array.isArray(detail) ? detail[0]?.msg : null
-    throw new Error(message ?? `${mode === 'signup' ? 'Sign up' : 'Login'} failed: ${response.status}`)
+  const what = mode === 'signup' ? 'Sign up' : 'Login'
+  let response: Response
+  try {
+    response = await fetch(ENDPOINTS[mode], {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(credentials),
+    })
+  } catch (cause) {
+    throw errorFromNetwork(what, cause)
   }
 
+  // Shows the server's own message when it sent one (e.g. "Email already registered"),
+  // otherwise says what the status code means. Details go to the console either way.
+  if (!response.ok) throw await errorFromResponse(response, what)
+
+  const body = await response.json()
   // Keep the JWT so later API calls can send "Authorization: Bearer <token>"
   sessionStorage.setItem(AUTH_TOKEN_KEY, body.access_token)
 }
