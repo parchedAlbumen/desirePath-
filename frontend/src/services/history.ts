@@ -6,6 +6,7 @@ import { buildLoop } from './mockRoutes.ts'
 
 const KEY = 'desirepath.runs.v1'
 const FAVORITES_KEY = 'desirepath.favorite-runs.v1'
+const FAVORITE_RECORDS_KEY = 'desirepath.favorite-run-records.v1'
 export const MAX_SAVED_RUNS = 2
 
 function runsKey(email: string | null): string {
@@ -16,6 +17,11 @@ function runsKey(email: string | null): string {
 function favoritesKey(email: string | null): string {
   const user = email?.trim().toLowerCase()
   return `${FAVORITES_KEY}.${user ? encodeURIComponent(user) : 'anonymous'}`
+}
+
+function favoriteRecordsKey(email: string | null): string {
+  const user = email?.trim().toLowerCase()
+  return `${FAVORITE_RECORDS_KEY}.${user ? encodeURIComponent(user) : 'anonymous'}`
 }
 
 export function loadFavoriteRunIds(email: string | null): string[] {
@@ -31,8 +37,31 @@ export function loadFavoriteRunIds(email: string | null): string[] {
   }
 }
 
-export function saveFavoriteRunIds(email: string | null, ids: string[]): void {
-  localStorage.setItem(favoritesKey(email), JSON.stringify(ids))
+export function loadFavoriteRuns(email: string | null, recentRuns: RunRecord[]): RunRecord[] {
+  try {
+    const raw = localStorage.getItem(favoriteRecordsKey(email))
+    if (raw) {
+      const parsed: unknown = JSON.parse(raw)
+      if (Array.isArray(parsed)) return parsed as RunRecord[]
+      throw new Error('Saved favorite runs are not a list of runs.')
+    }
+  } catch (error) {
+    console.warn('[history] Could not load saved favorite runs:', error)
+  }
+  const favoriteIds = loadFavoriteRunIds(email)
+  const migratedFavorites = recentRuns.filter((run) => favoriteIds.includes(run.id))
+  if (migratedFavorites.length > 0) {
+    try {
+      saveFavoriteRuns(email, migratedFavorites)
+    } catch (error) {
+      console.warn('[history] Could not migrate favorite runs:', error)
+    }
+  }
+  return migratedFavorites
+}
+
+export function saveFavoriteRuns(email: string | null, runs: RunRecord[]): void {
+  localStorage.setItem(favoriteRecordsKey(email), JSON.stringify(runs))
 }
 
 export function mostRecentRuns(runs: RunRecord[]): RunRecord[] {

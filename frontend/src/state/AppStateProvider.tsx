@@ -113,10 +113,10 @@ export function AppStateProvider({ children, userEmail }: { children: ReactNode;
     [],
   )
 
-  const endRun = useCallback(() => {
+  const endRun = useCallback((save = true) => {
     stopSpeaking()
     if (!run) return
-    if (run.distanceKm >= 0.05) {
+    if (save && run.distanceKm >= 0.05) {
       const { route } = run
       const fraction = run.distanceKm / route.distanceKm
       const done = route.points.slice(0, Math.max(1, Math.floor(fraction * (route.points.length - 1)) + 1))
